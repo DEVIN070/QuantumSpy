@@ -307,9 +307,9 @@ local function createSection(parent, name, position, size)
 end
 
 local function createInspectorRow(parent, label, valueColor, layoutOrder)
-    local row = Create("Frame", {Parent = parent, BackgroundTransparency = 1, LayoutOrder = layoutOrder or 0, Size = UDim2.new(1, 0, 0, 12)})
-    Create("TextLabel", {Parent = row, BackgroundTransparency = 1, Size = UDim2.fromOffset(62, 12), Font = Enum.Font.Code, Text = label, TextColor3 = Quantum.TextMuted, TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left})
-    return Create("TextLabel", {Parent = row, BackgroundTransparency = 1, Position = UDim2.fromOffset(62, 0), Size = UDim2.new(1, -62, 0, 12), Font = Enum.Font.Code, Text = "—", TextColor3 = valueColor or Quantum.Text, TextSize = 9, TextTruncate = Enum.TextTruncate.AtEnd, TextXAlignment = Enum.TextXAlignment.Left})
+    local row = Create("Frame", {Parent = parent, BackgroundTransparency = 1, LayoutOrder = layoutOrder or 0, Size = UDim2.new(1, 0, 0, 10), ZIndex = 4})
+    Create("TextLabel", {Parent = row, BackgroundTransparency = 1, Size = UDim2.fromOffset(62, 10), Font = Enum.Font.Code, Text = label, TextColor3 = Quantum.TextMuted, TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5})
+    return Create("TextLabel", {Parent = row, BackgroundTransparency = 1, Position = UDim2.fromOffset(62, 0), Size = UDim2.new(1, -62, 0, 10), Font = Enum.Font.Code, Text = "—", TextColor3 = valueColor or Quantum.Text, TextSize = 9, TextTruncate = Enum.TextTruncate.AtEnd, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5})
 end
 
 local function createToolbarButton(parent, name, isPrimary)
@@ -376,21 +376,22 @@ local UIListLayout = Create("UIListLayout",{Parent = LogList,HorizontalAlignment
 local RightPanel = Create("CanvasGroup",{Name = "Frame",Parent = Background,BackgroundColor3 = Quantum.Background,BorderSizePixel = 0,Position = UDim2.fromOffset(SIDEBAR_WIDTH, HEADER_HEIGHT),Size = UDim2.new(1, -SIDEBAR_WIDTH, 1, -HEADER_HEIGHT - STATUS_HEIGHT)})
 local InspectorHeader = createSection(RightPanel, "remote", UDim2.fromOffset(9, 10), UDim2.new(1, -19, 0, 79))
 local InspectorSelection = Create("TextLabel",{Name = "Selection",Parent = InspectorHeader,BackgroundColor3 = InspectorHeader.BackgroundColor3,BorderSizePixel = 0,Position = UDim2.new(1, -146, 0, -8),Size = UDim2.fromOffset(134, 16),ZIndex = 6,Font = Enum.Font.Code,Text = "no remote selected",TextColor3 = Quantum.TextMuted,TextSize = 9,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Right})
-local RemoteContent = Create("Frame",{Name = "RemoteContent",Parent = InspectorHeader,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 9),Size = UDim2.new(1, -16, 1, -17)})
+local RemoteContent = Create("Frame",{Name = "RemoteContent",Parent = InspectorHeader,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 9),Size = UDim2.new(1, -16, 1, -17),ZIndex = 2})
 addStroke(RemoteContent, Quantum.BorderSubtle)
-local InspectorProperties = Create("Frame",{Parent = RemoteContent,BackgroundTransparency = 1,Position = UDim2.fromOffset(8, 3),Size = UDim2.new(1, -16, 1, -6)})
+local InspectorProperties = Create("Frame",{Parent = RemoteContent,BackgroundTransparency = 1,Position = UDim2.fromOffset(8, 1),Size = UDim2.new(1, -16, 1, -2),ZIndex = 3})
 Create("UIListLayout",{Parent = InspectorProperties,SortOrder = Enum.SortOrder.LayoutOrder})
 local RemoteNameValue = createInspectorRow(InspectorProperties, "NAME", Quantum.TextSecondary, 1)
-local RemoteTypeValue = createInspectorRow(InspectorProperties, "TYPE", Quantum.TextSecondary, 2)
+local RemoteTypeValue = createInspectorRow(InspectorProperties, "CLASS", Quantum.TextSecondary, 2)
 local RemoteMethodValue = createInspectorRow(InspectorProperties, "METHOD", Quantum.TextSecondary, 3)
 local RemoteCallsValue = createInspectorRow(InspectorProperties, "CALLS", Quantum.TextSecondary, 4)
 local RemotePathValue = createInspectorRow(InspectorProperties, "PATH", Quantum.TextSecondary, 5)
+local RemoteScriptValue = createInspectorRow(InspectorProperties, "SCRIPT", Quantum.TextSecondary, 6)
 RemoteCallsValue.Text = "0"
 
 local ArgumentsSection = createSection(RightPanel, "arguments", UDim2.fromOffset(9, 100), UDim2.new(1, -19, 0, 107))
-local ArgumentsScroll = Create("ScrollingFrame",{Parent = ArgumentsSection,Active = true,AutomaticCanvasSize = Enum.AutomaticSize.Y,BackgroundColor3 = Quantum.InnerSurface,BackgroundTransparency = 0,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 9),Size = UDim2.new(1, -16, 1, -17),CanvasSize = UDim2.new(),ScrollBarThickness = 2,ScrollBarImageColor3 = Quantum.TextVeryMuted})
+local ArgumentsScroll = Create("ScrollingFrame",{Parent = ArgumentsSection,Active = true,AutomaticCanvasSize = Enum.AutomaticSize.Y,BackgroundColor3 = Quantum.InnerSurface,BackgroundTransparency = 0,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 9),Size = UDim2.new(1, -16, 1, -17),CanvasSize = UDim2.new(),ScrollBarThickness = 2,ScrollBarImageColor3 = Quantum.TextVeryMuted,ZIndex = 2})
 addStroke(ArgumentsScroll, Quantum.BorderSubtle)
-local ArgumentsText = Create("TextLabel",{Name = "ArgumentsEmpty",Parent = ArgumentsScroll,BackgroundTransparency = 1,LayoutOrder = 0,Size = UDim2.new(1, -12, 0, 18),Font = Enum.Font.Code,Text = "no arguments",TextColor3 = Quantum.TextMuted,TextSize = 10,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Left,TextYAlignment = Enum.TextYAlignment.Center})
+local ArgumentsText = Create("TextLabel",{Name = "ArgumentsEmpty",Parent = ArgumentsScroll,BackgroundTransparency = 1,LayoutOrder = 0,Size = UDim2.new(1, -12, 0, 18),Font = Enum.Font.Code,Text = "no arguments",TextColor3 = Quantum.TextMuted,TextSize = 10,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Left,TextYAlignment = Enum.TextYAlignment.Center,ZIndex = 4})
 Create("UIListLayout",{Parent = ArgumentsScroll,HorizontalAlignment = Enum.HorizontalAlignment.Left,SortOrder = Enum.SortOrder.LayoutOrder,Padding = UDim.new(0, 1)})
 Create("UIPadding",{Parent = ArgumentsScroll,PaddingLeft = UDim.new(0, 6),PaddingRight = UDim.new(0, 6),PaddingTop = UDim.new(0, 5),PaddingBottom = UDim.new(0, 5)})
 
@@ -399,9 +400,9 @@ local CopyCodeButton = Create("TextButton",{Name = "CopyCode",Parent = CodeSecti
 addCorner(CopyCodeButton, 2)
 addStroke(CopyCodeButton, Quantum.Border)
 styleButton(CopyCodeButton, Quantum.InnerSurface, Quantum.Hover, Quantum.Panel)
-local CodeSurface = Create("Frame",{Name = "EditorSurface",Parent = CodeSection,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 29),Size = UDim2.new(1, -16, 1, -37)})
+local CodeSurface = Create("Frame",{Name = "EditorSurface",Parent = CodeSection,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 29),Size = UDim2.new(1, -16, 1, -37),ZIndex = 2})
 addStroke(CodeSurface, Quantum.BorderSubtle)
-local CodeBox = Create("Frame",{Parent = CodeSurface,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.fromOffset(1, 1),Size = UDim2.new(1, -2, 1, -2),ClipsDescendants = true})
+local CodeBox = Create("Frame",{Parent = CodeSurface,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.fromOffset(1, 1),Size = UDim2.new(1, -2, 1, -2),ClipsDescendants = true,ZIndex = 4})
 
 local ActionsSection = createSection(RightPanel, "actions", UDim2.new(0, 9, 1, -TOOLBAR_HEIGHT - 2), UDim2.new(1, -19, 0, TOOLBAR_HEIGHT - 10))
 local ActionsContent = Create("Frame",{Name = "ActionsContent",Parent = ActionsSection,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 9),Size = UDim2.new(1, -16, 1, -17)})
@@ -470,6 +471,7 @@ end
         RemoteMethodValue = RemoteMethodValue,
         RemoteCallsValue = RemoteCallsValue,
         RemotePathValue = RemotePathValue,
+        RemoteScriptValue = RemoteScriptValue,
         ArgumentsScroll = ArgumentsScroll,
         ArgumentsText = ArgumentsText,
         CodeBox = CodeBox,
@@ -560,11 +562,13 @@ local function resetQuantumInspector()
     UI.RemoteMethodValue.Text = "—"
     UI.RemoteCallsValue.Text = "0"
     UI.RemotePathValue.Text = "—"
+    UI.RemoteScriptValue.Text = "—"
     UI.RemoteNameValue.TextColor3 = Quantum.TextSecondary
     UI.RemoteTypeValue.TextColor3 = Quantum.TextSecondary
     UI.RemoteMethodValue.TextColor3 = Quantum.TextSecondary
     UI.RemoteCallsValue.TextColor3 = Quantum.TextSecondary
     UI.RemotePathValue.TextColor3 = Quantum.TextSecondary
+    UI.RemoteScriptValue.TextColor3 = Quantum.TextSecondary
     UI.ArgumentsText.Text = "no arguments"
     UI.ArgumentsText.TextColor3 = Quantum.TextMuted
     UI.ArgumentsText.Visible = true
@@ -1281,11 +1285,11 @@ local function renderArgumentTree(args, owner)
         local valueType, preview = formatArgumentValue(value)
         local isTable = valueType == "table"
         local isExpanded = isTable and expansion[path] == true
-        local row = Create("Frame",{Name = "ArgumentRow",Parent = UI.ArgumentsScroll,BackgroundColor3 = Quantum.Hover,BackgroundTransparency = 1,BorderSizePixel = 0,LayoutOrder = rowOrder,Size = UDim2.new(1, -12, 0, 18)})
+        local row = Create("Frame",{Name = "ArgumentRow",Parent = UI.ArgumentsScroll,BackgroundColor3 = Quantum.Hover,BackgroundTransparency = 1,BorderSizePixel = 0,LayoutOrder = rowOrder,Size = UDim2.new(1, -12, 0, 18),ZIndex = 3})
         local indentOffset = 6 + depth * 14
-        local keyButton = Create("TextButton",{Parent = row,Active = isTable,AutoButtonColor = false,BackgroundTransparency = 1,Position = UDim2.fromOffset(indentOffset, 0),Size = UDim2.new(0.42, -indentOffset, 1, 0),Font = Enum.Font.Code,Text = (isTable and (isExpanded and "▼ " or "▶ ") or "  ") .. key,TextColor3 = Quantum.TextSecondary,TextSize = 10,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Left})
-        Create("TextLabel",{Parent = row,BackgroundTransparency = 1,Position = UDim2.new(0.42, 4, 0, 0),Size = UDim2.fromOffset(62, 18),Font = Enum.Font.Code,Text = valueType,TextColor3 = argumentTypeColors[valueType] or Quantum.TextMuted,TextSize = 9,TextXAlignment = Enum.TextXAlignment.Left})
-        local valueText = Create("TextLabel",{Parent = row,BackgroundTransparency = 1,Position = UDim2.new(0.42, 68, 0, 0),Size = UDim2.new(0.58, -74, 0, 18),Font = Enum.Font.Code,Text = preview,TextColor3 = Quantum.TextMuted,TextSize = 9,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Left})
+        local keyButton = Create("TextButton",{Parent = row,Active = isTable,AutoButtonColor = false,BackgroundTransparency = 1,Position = UDim2.fromOffset(indentOffset, 0),Size = UDim2.new(0.42, -indentOffset, 1, 0),Font = Enum.Font.Code,Text = (isTable and (isExpanded and "▼ " or "▶ ") or "  ") .. key,TextColor3 = Quantum.TextSecondary,TextSize = 10,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 4})
+        Create("TextLabel",{Parent = row,BackgroundTransparency = 1,Position = UDim2.new(0.42, 4, 0, 0),Size = UDim2.fromOffset(62, 18),Font = Enum.Font.Code,Text = valueType,TextColor3 = argumentTypeColors[valueType] or Quantum.TextMuted,TextSize = 9,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 4})
+        local valueText = Create("TextLabel",{Parent = row,BackgroundTransparency = 1,Position = UDim2.new(0.42, 68, 0, 0),Size = UDim2.new(0.58, -74, 0, 18),Font = Enum.Font.Code,Text = preview,TextColor3 = Quantum.TextMuted,TextSize = 9,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 4})
 
         keyButton.MouseEnter:Connect(function()
             quantumTween(row, {BackgroundTransparency = 0.35}, 0.1)
@@ -1376,11 +1380,14 @@ function eventSelect(selection)
         UI.RemoteMethodValue.Text = selected.Method or "—"
         UI.RemoteCallsValue.Text = tostring(getRemoteCallCount(selected))
         UI.RemotePathValue.Text = selected.RemotePath or "—"
+        local source = selected.Source
+        UI.RemoteScriptValue.Text = typeof(source) == "Instance" and source.Name or typeof(source) == "string" and source or "—"
         UI.RemoteNameValue.TextColor3 = Quantum.Text
         UI.RemoteTypeValue.TextColor3 = Quantum.TextSecondary
         UI.RemoteMethodValue.TextColor3 = Quantum.Cyan
         UI.RemoteCallsValue.TextColor3 = Quantum.Text
         UI.RemotePathValue.TextColor3 = Quantum.TextSecondary
+        UI.RemoteScriptValue.TextColor3 = Quantum.TextSecondary
         UI.ArgumentsScroll.CanvasPosition = Vector2.zero
         renderArgumentTree(selected.args, selected)
         quantumTween(UI.CodeBox, {BackgroundColor3 = Quantum.Surface}, 0.07)
