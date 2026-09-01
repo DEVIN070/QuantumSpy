@@ -30,6 +30,7 @@ local Highlight = {}
 local parentFrame
 local scrollingFrame
 local textFrame
+local gutterFrame
 local lineNumbersFrame
 local lines = {}
 
@@ -269,9 +270,9 @@ function render()
             lineText.Text = lineStr
             lineText.Parent = textFrame
 
-            if i ~= #tableContents + 1 then
+            if i ~= #tableContents + 1 or rawStr ~= "" or #tableContents == 0 then
                 local lineNumber = Instance.new("TextLabel")
-                lineNumber.Text = line
+                lineNumber.Text = string.format("%02d", line)
                 lineNumber.Font = font
                 lineNumber.TextSize = textSize
                 lineNumber.Size = UDim2.new(1, 0, 0, lineSpace)
@@ -315,11 +316,13 @@ end
 function onFrameSizeChange()
     local newSize = parentFrame.AbsoluteSize
     scrollingFrame.Size = UDim2.new(0, newSize.X, 0, newSize.Y)
+    gutterFrame.Size = UDim2.new(0, 34, 0, math.max(newSize.Y, line * lineSpace))
 end
 
 function updateCanvasSize()
     -- local codeSize = Vector2.new(TextService:GetTextSize(Highlight:getRaw(), textSize, font, Vector2.new(math.huge, math.huge)).X + 60, #lines * lineSpace + 60)
     scrollingFrame.CanvasSize = UDim2.new(0, largestX, 0, line * lineSpace)
+    gutterFrame.Size = UDim2.new(0, 34, 0, math.max(parentFrame.AbsoluteSize.Y, line * lineSpace))
 end
 
 function updateZIndex()
@@ -341,6 +344,7 @@ function Highlight:init(frame)
         parentFrame = frame
         scrollingFrame = Instance.new("ScrollingFrame")
         textFrame = Instance.new("Frame")
+        gutterFrame = Instance.new("Frame")
         lineNumbersFrame = Instance.new("Frame")
 
         local parentSize = frame.AbsoluteSize
@@ -350,15 +354,28 @@ function Highlight:init(frame)
         scrollingFrame.ScrollBarThickness = 2
         scrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(102, 109, 119)
 
-        textFrame.Size = UDim2.new(1, -40, 1, 0)
-        textFrame.Position = UDim2.new(0, 40, 0, 0)
+        textFrame.Size = UDim2.new(1, -42, 1, 0)
+        textFrame.Position = UDim2.new(0, 42, 0, 0)
         textFrame.BackgroundTransparency = 1
 
+        gutterFrame.Size = UDim2.new(0, 34, 1, 0)
+        gutterFrame.BackgroundColor3 = Color3.fromRGB(12, 15, 19)
+        gutterFrame.BorderSizePixel = 0
+
+        local gutterDivider = Instance.new("Frame")
+        gutterDivider.BackgroundColor3 = Color3.fromRGB(66, 72, 81)
+        gutterDivider.BorderSizePixel = 0
+        gutterDivider.Position = UDim2.new(1, -1, 0, 0)
+        gutterDivider.Size = UDim2.new(0, 1, 1, 0)
+        gutterDivider.Parent = gutterFrame
+
+        lineNumbersFrame.Position = UDim2.fromOffset(4, 0)
         lineNumbersFrame.Size = UDim2.new(0, 25, 1, 0)
         lineNumbersFrame.BackgroundTransparency = 1
 
         textFrame.Parent = scrollingFrame
-        lineNumbersFrame.Parent = scrollingFrame
+        lineNumbersFrame.Parent = gutterFrame
+        gutterFrame.Parent = scrollingFrame
         scrollingFrame.Parent = parentFrame
 
         render()
