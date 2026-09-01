@@ -2592,6 +2592,43 @@ if not getgenv().SimpleSpyExecuted then
             ErrorPrompt("Simple Spy V3 will not function to it's fullest capablity due to your executor not supporting hookmetamethod.",true)
         end
         codebox = Highlight.new(UI.CodeBox)
+        do
+            local editorScroller = UI.CodeBox:FindFirstChildOfClass("ScrollingFrame")
+            if editorScroller then
+                local editorTextFrame
+                local gutterFrame
+                for _, child in next, editorScroller:GetChildren() do
+                    if child:IsA("Frame") then
+                        if child.BackgroundTransparency == 1 then
+                            editorTextFrame = child
+                        else
+                            gutterFrame = child
+                        end
+                    end
+                end
+
+                local function alignEditorSpacing()
+                    if editorTextFrame and editorTextFrame.Parent then
+                        editorTextFrame.Position = UDim2.fromOffset(44, 0)
+                        editorTextFrame.Size = UDim2.new(1, -44, 1, 0)
+                    end
+                    if gutterFrame and gutterFrame.Parent then
+                        gutterFrame.Size = UDim2.new(0, 36, gutterFrame.Size.Y.Scale, gutterFrame.Size.Y.Offset)
+                        for _, child in next, gutterFrame:GetChildren() do
+                            if child:IsA("Frame") and child.BackgroundTransparency == 1 then
+                                child.Position = UDim2.fromOffset(4, 0)
+                                child.Size = UDim2.new(0, 27, 1, 0)
+                            end
+                        end
+                    end
+                end
+
+                alignEditorSpacing()
+                UI.CodeBox:GetPropertyChangedSignal("AbsoluteSize"):Connect(alignEditorSpacing)
+                Create("Frame",{Name = "EditorRightPadding",Parent = UI.CodeBox,Active = false,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.new(1, -6, 0, 0),Size = UDim2.new(0, 4, 1, -6),ZIndex = UI.CodeBox.ZIndex})
+                Create("Frame",{Name = "EditorBottomPadding",Parent = UI.CodeBox,Active = false,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.new(0, 36, 1, -6),Size = UDim2.new(1, -42, 0, 4),ZIndex = UI.CodeBox.ZIndex})
+            end
+        end
         codebox:setRaw("-- select a remote to inspect generated code")
         getgenv().SimpleSpy = SimpleSpy
         getgenv().getNil = function(name,class)
