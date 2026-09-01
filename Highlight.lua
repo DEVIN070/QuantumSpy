@@ -43,17 +43,17 @@ local lineSpace = 16
 local font = Enum.Font.Code
 local textSize = 13
 
-local backgroundColor = Color3.fromRGB(11, 16, 22)
+local backgroundColor = Color3.fromRGB(10, 13, 16)
 local operatorColor = Color3.fromRGB(255, 122, 178)
 local functionColor = Color3.fromRGB(130, 170, 255)
 local stringColor = Color3.fromRGB(195, 232, 141)
 local numberColor = Color3.fromRGB(247, 140, 108)
 local booleanColor = numberColor
 local objectColor = Color3.fromRGB(199, 146, 234)
-local defaultColor = Color3.fromRGB(230, 237, 243)
-local commentColor = Color3.fromRGB(101, 113, 128)
+local defaultColor = Color3.fromRGB(214, 217, 222)
+local commentColor = Color3.fromRGB(98, 106, 117)
 local lineNumberColor = commentColor
-local genericColor = Color3.fromRGB(146, 158, 173)
+local genericColor = Color3.fromRGB(150, 156, 165)
 
 local operators = {"^(function)[^%w_]", "^(local)[^%w_]", "^(if)[^%w_]", "^(for)[^%w_]", "^(while)[^%w_]", "^(then)[^%w_]", "^(do)[^%w_]", "^(else)[^%w_]", "^(elseif)[^%w_]", "^(return)[^%w_]", "^(end)[^%w_]", "^(continue)[^%w_]", "^(and)[^%w_]", "^(not)[^%w_]", "^(or)[^%w_]", "[^%w_](or)[^%w_]", "[^%w_](and)[^%w_]", "[^%w_](not)[^%w_]", "[^%w_](continue)[^%w_]", "[^%w_](function)[^%w_]", "[^%w_](local)[^%w_]", "[^%w_](if)[^%w_]", "[^%w_](for)[^%w_]", "[^%w_](while)[^%w_]", "[^%w_](then)[^%w_]", "[^%w_](do)[^%w_]", "[^%w_](else)[^%w_]", "[^%w_](elseif)[^%w_]", "[^%w_](return)[^%w_]", "[^%w_](end)[^%w_]"}
 --- In this case, patterns could not be used, so just the string characters are provided
@@ -347,8 +347,8 @@ function Highlight:init(frame)
         scrollingFrame.Size = UDim2.new(0, parentSize.X, 0, parentSize.Y)
         scrollingFrame.BackgroundColor3 = backgroundColor
         scrollingFrame.BorderSizePixel = 0
-        scrollingFrame.ScrollBarThickness = 3
-        scrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(70, 81, 94)
+        scrollingFrame.ScrollBarThickness = 2
+        scrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(98, 106, 117)
 
         textFrame.Size = UDim2.new(1, -40, 1, 0)
         textFrame.Position = UDim2.new(0, 40, 0, 0)
