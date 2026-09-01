@@ -481,7 +481,7 @@ local StatusSeparatorThree = Create("TextLabel",{Parent = StatusBar,BackgroundTr
 local StatusRemotesText = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(338, 3),Size = UDim2.fromOffset(92, 18),Font = Enum.Font.Code,Text = "remotes:0",TextColor3 = Quantum.TextMuted,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 6})
 local ReadyText = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.new(1, -66, 0, 3),Size = UDim2.fromOffset(54, 18),Font = Enum.Font.Code,Text = "ready",TextColor3 = Quantum.Cyan,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Right,ZIndex = 6})
 
-local Layout = {SidebarWidth = SIDEBAR_WIDTH, DividerDragging = false, Mode = "Full", UseInspectorTabs = false, InspectorTab = "Remote", SidebarCollapsed = false, SidebarUserOverride = false, WasAutoCollapseWidth = false, CompactRows = false, CompactActions = false, OverflowOrder = 0}
+local Layout = {SidebarWidth = SIDEBAR_WIDTH, DividerDragging = false, Mode = "Full", UseInspectorTabs = false, InspectorTab = "Remote", SidebarCollapsed = false, SidebarUserOverride = false, WasAutoCollapseWidth = false, CompactRows = false, CompactActions = false, CompactMetadata = false, OverflowOrder = 0}
 local Resize = {Active = false, Direction = nil, StartMouse = nil, StartPosition = nil, StartSize = nil}
 local PaneDivider = Create("TextButton",{Name = "PaneDivider",Parent = Background,BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.fromOffset(SIDEBAR_WIDTH - 3, HEADER_HEIGHT),Size = UDim2.new(0, 6, 1, -HEADER_HEIGHT - STATUS_HEIGHT),ZIndex = 10,AutoButtonColor = false,Text = ""})
 local PaneDividerLine = Create("Frame",{Name = "DividerLine",Parent = PaneDivider,BackgroundColor3 = Quantum.BorderSubtle,BorderSizePixel = 0,Position = UDim2.fromOffset(2, 0),Size = UDim2.new(0, 1, 1, 0),ZIndex = 11})
@@ -546,6 +546,7 @@ local ActionOverflowButtons = {}
         InspectorHeader = InspectorHeader,
         InspectorSelection = InspectorSelection,
         RemoteContent = RemoteContent,
+        InspectorProperties = InspectorProperties,
         RemoteNameValue = RemoteNameValue,
         RemoteTypeValue = RemoteTypeValue,
         RemoteMethodValue = RemoteMethodValue,
@@ -744,11 +745,20 @@ local function toggleActionsOverflowMenu()
         UI.ActionsOverflowMenu.Visible = false
         return
     end
-    local viewportSize = workspace.CurrentCamera.ViewportSize
     local menuSize = UI.ActionsOverflowMenu.AbsoluteSize
     local buttonPosition = UI.ActionsOverflowButton.AbsolutePosition
-    local x = math.clamp(math.round(buttonPosition.X + UI.ActionsOverflowButton.AbsoluteSize.X - menuSize.X), 4, math.max(4, viewportSize.X - menuSize.X - 4))
-    local y = math.clamp(math.round(buttonPosition.Y - menuSize.Y - 4), 4, math.max(4, viewportSize.Y - GuiInset.Y - menuSize.Y - 4))
+    local buttonSize = UI.ActionsOverflowButton.AbsoluteSize
+    local windowPosition = UI.Background.AbsolutePosition
+    local windowSize = UI.Background.AbsoluteSize
+    local left = math.round(windowPosition.X + 4)
+    local top = math.round(windowPosition.Y + 4)
+    local right = math.round(windowPosition.X + windowSize.X - 4)
+    local bottom = math.round(windowPosition.Y + windowSize.Y - 4)
+    local belowY = math.round(buttonPosition.Y + buttonSize.Y + 4)
+    local aboveY = math.round(buttonPosition.Y - menuSize.Y - 4)
+    local x = math.clamp(math.round(buttonPosition.X + buttonSize.X - menuSize.X), left, math.max(left, right - menuSize.X))
+    local y = belowY + menuSize.Y <= bottom and belowY or aboveY
+    y = math.clamp(y, top, math.max(top, bottom - menuSize.Y))
     UI.ContextMenu.Visible = false
     UI.ActionsOverflowMenu.Position = UDim2.fromOffset(x, y)
     UI.ActionsOverflowMenu.Visible = true
@@ -1385,9 +1395,10 @@ function updateResponsiveLayout(speed, preserveSidebarWidth)
     if useInspectorTabs then
         local tabHeight = 30
         local panelY = 38
-        local actionsHeight = mode == "Thin" and 38 or 44
+        local actionsHeight = 44
         local actionsY = contentHeight - actionsHeight - 3
         local panelHeight = math.max(64, actionsY - panelY - 5)
+        local remoteHeight = math.min(116, panelHeight)
         applyResponsiveProperties(UI.InspectorTabs, {Position = UDim2.fromOffset(9, 4), Size = UDim2.fromOffset(rightWidth, tabHeight)}, speed)
 
         local tabsWidth = math.max(3, rightWidth - 2)
@@ -1411,14 +1422,12 @@ function updateResponsiveLayout(speed, preserveSidebarWidth)
         UI.CodeSection.Visible = selectedTab == "Code"
         UI.ActionsSection.Visible = true
         local panelProperties = {Position = UDim2.fromOffset(9, panelY), Size = UDim2.fromOffset(rightWidth, panelHeight)}
-        applyResponsiveProperties(UI.InspectorHeader, panelProperties, speed)
+        applyResponsiveProperties(UI.InspectorHeader, {Position = UDim2.fromOffset(9, panelY), Size = UDim2.fromOffset(rightWidth, remoteHeight)}, speed)
         applyResponsiveProperties(UI.ArgumentsSection, panelProperties, speed)
         applyResponsiveProperties(UI.CodeSection, panelProperties, speed)
         applyResponsiveProperties(UI.ActionsSection, {Position = UDim2.fromOffset(9, actionsY), Size = UDim2.fromOffset(rightWidth, actionsHeight)}, speed)
-        applyResponsiveProperties(UI.RemoteContent, {Position = UDim2.fromOffset(8, 8), Size = mode == "Thin" and UDim2.new(1, -16, 0, 62) or UDim2.new(1, -16, 1, -16)}, speed)
+        applyResponsiveProperties(UI.RemoteContent, {Position = UDim2.fromOffset(8, 8), Size = UDim2.new(1, -16, 1, -16)}, speed)
         applyResponsiveProperties(UI.ActionsContent, {Position = UDim2.fromOffset(5, 5), Size = UDim2.new(1, -10, 1, -8)}, speed)
-        applyResponsiveProperties(UI.ActionsScroller, {Position = UDim2.fromOffset(1, 1), Size = UDim2.new(1, -37, 1, -2)}, speed)
-        applyResponsiveProperties(UI.ActionsOverflowButton, {Position = UDim2.new(1, -31, 0, 1), Size = UDim2.fromOffset(30, 28)}, speed)
         UI.ActionsOverflowButton.Visible = true
     else
         UI.InspectorHeader.Visible = true
@@ -1449,6 +1458,21 @@ function updateResponsiveLayout(speed, preserveSidebarWidth)
         applyResponsiveProperties(UI.ActionsSection, {Position = UDim2.fromOffset(9, actionsY), Size = UDim2.fromOffset(rightWidth, actionsHeight)}, speed)
     end
 
+    if UI.Layout.CompactMetadata ~= useInspectorTabs then
+        UI.Layout.CompactMetadata = useInspectorTabs
+        local rowHeight = useInspectorTabs and 14 or 9
+        for _, row in next, UI.InspectorProperties:GetChildren() do
+            if row:IsA("Frame") then
+                row.Size = UDim2.new(1, 0, 0, rowHeight)
+                for _, label in next, row:GetChildren() do
+                    if label:IsA("TextLabel") then
+                        label.Size = UDim2.new(label.Size.X.Scale, label.Size.X.Offset, 0, rowHeight)
+                    end
+                end
+            end
+        end
+    end
+
     if updateFunctionCanvas then
         updateFunctionCanvas()
     end
@@ -1460,6 +1484,7 @@ for tabName, tabButton in next, UI.InspectorTabButtons do
     end))
 end
 table.insert(connections, UI.SidebarToggle.MouseButton1Click:Connect(function()
+    closeContextMenu()
     UI.Layout.SidebarUserOverride = true
     UI.Layout.SidebarCollapsed = not UI.Layout.SidebarCollapsed
     updateResponsiveLayout(0, true)
@@ -1577,6 +1602,18 @@ end
 function backgroundUserInput(input)
     local controlDown = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
     local focusedTextBox = UserInputService:GetFocusedTextBox()
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and UI.ActionsOverflowMenu.Visible then
+        local pointer = UserInputService:GetMouseLocation() - GuiInset
+        local menuPosition = UI.ActionsOverflowMenu.AbsolutePosition
+        local menuSize = UI.ActionsOverflowMenu.AbsoluteSize
+        local buttonPosition = UI.ActionsOverflowButton.AbsolutePosition
+        local buttonSize = UI.ActionsOverflowButton.AbsoluteSize
+        local insideMenu = pointer.X >= menuPosition.X and pointer.X <= menuPosition.X + menuSize.X and pointer.Y >= menuPosition.Y and pointer.Y <= menuPosition.Y + menuSize.Y
+        local insideButton = pointer.X >= buttonPosition.X and pointer.X <= buttonPosition.X + buttonSize.X and pointer.Y >= buttonPosition.Y and pointer.Y <= buttonPosition.Y + buttonSize.Y
+        if not insideMenu and not insideButton then
+            UI.ActionsOverflowMenu.Visible = false
+        end
+    end
     if input.KeyCode == Enum.KeyCode.Escape then
         closeContextMenu()
         if focusedTextBox then
@@ -1797,10 +1834,6 @@ end
 
 --- Updates the canvas size to fit the current amount of function buttons
 function updateFunctionCanvas()
-    local usableWidth = UI.ActionsScroller.AbsoluteSize.X - 6
-    if usableWidth <= 0 then
-        return
-    end
     local compactActions = UI.Layout.UseInspectorTabs
     if UI.Layout.CompactActions ~= compactActions then
         UI.Layout.CompactActions = compactActions
@@ -1813,19 +1846,34 @@ function updateFunctionCanvas()
 
     local gap = compactActions and 4 or 6
     if compactActions then
+        local availableWidth = math.max(6, math.round(UI.ActionsContent.AbsoluteSize.X) - 2)
+        local buttonWidth = math.max(1, math.floor((availableWidth - gap * 5) / 6))
+        local primaryWidth = buttonWidth * 5 + gap * 4
+        UI.ActionsScroller.Position = UDim2.fromOffset(1, 4)
+        UI.ActionsScroller.Size = UDim2.fromOffset(primaryWidth, 28)
+        UI.ActionsOverflowButton.Position = UDim2.fromOffset(1 + primaryWidth + gap, 4)
+        UI.ActionsOverflowButton.Size = UDim2.fromOffset(buttonWidth, 28)
         UI.ActionsScroller.ScrollingDirection = Enum.ScrollingDirection.Y
         UI.ActionsScroller.ScrollBarThickness = 0
+        UI.ActionsPadding.PaddingLeft = UDim.new(0, 0)
+        UI.ActionsPadding.PaddingRight = UDim.new(0, 0)
         UI.ActionsPadding.PaddingTop = UDim.new(0, 0)
         UI.ActionsPadding.PaddingBottom = UDim.new(0, 0)
         UI.ActionsGrid.CellPadding = UDim2.fromOffset(gap, 0)
         UI.ActionsGrid.FillDirectionMaxCells = 5
-        UI.ActionsGrid.CellSize = UDim2.fromOffset(math.max(1, math.floor((usableWidth - gap * 4) / 5)), 28)
+        UI.ActionsGrid.CellSize = UDim2.fromOffset(buttonWidth, 28)
         UI.ActionsScroller.CanvasSize = UDim2.fromOffset(0, 0)
         return
     end
 
+    local usableWidth = UI.ActionsScroller.AbsoluteSize.X - 6
+    if usableWidth <= 0 then
+        return
+    end
     UI.ActionsScroller.ScrollingDirection = Enum.ScrollingDirection.Y
     UI.ActionsScroller.ScrollBarThickness = 2
+    UI.ActionsPadding.PaddingLeft = UDim.new(0, 3)
+    UI.ActionsPadding.PaddingRight = UDim.new(0, 3)
     UI.ActionsPadding.PaddingTop = UDim.new(0, 3)
     UI.ActionsPadding.PaddingBottom = UDim.new(0, 3)
     UI.ActionsGrid.CellPadding = UDim2.fromOffset(gap, gap)
@@ -1848,8 +1896,10 @@ end
 
 table.insert(connections, UI.ActionsGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateFunctionCanvas))
 table.insert(connections, UI.ActionsScroller:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateFunctionCanvas))
+table.insert(connections, UI.ActionsContent:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateFunctionCanvas))
 table.insert(connections, UI.RemoteListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateRemoteCanvas))
 table.insert(connections, UI.Background:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+    UI.ActionsOverflowMenu.Visible = false
     updateResponsiveLayout(0, false)
 end))
 
@@ -1928,7 +1978,8 @@ function newButton(name, description, onClick)
 
     if not compactLabel then
         UI.Layout.OverflowOrder += 1
-        local overflowButton = Create("TextButton",{Name = name,Parent = UI.ActionsOverflowScroll,BackgroundColor3 = Quantum.SurfaceRaised,BorderSizePixel = 0,LayoutOrder = UI.Layout.OverflowOrder,Size = UDim2.new(1, -4, 0, 23),AutoButtonColor = false,Font = Enum.Font.Code,Text = lower(name),TextColor3 = Quantum.TextSecondary,TextSize = 9,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 36})
+        local overflowLabel = name == "Clr Logs" and "clear logs" or name == "Clr Blacklist" and "clear blacklist" or lower(name)
+        local overflowButton = Create("TextButton",{Name = name,Parent = UI.ActionsOverflowScroll,BackgroundColor3 = Quantum.SurfaceRaised,BorderSizePixel = 0,LayoutOrder = UI.Layout.OverflowOrder,Size = UDim2.new(1, -4, 0, 23),AutoButtonColor = false,Font = Enum.Font.Code,Text = overflowLabel,TextColor3 = Quantum.TextSecondary,TextSize = 9,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 36})
         Create("UIPadding",{Parent = overflowButton,PaddingLeft = UDim.new(0, 7),PaddingRight = UDim.new(0, 7)})
         styleButton(overflowButton, Quantum.SurfaceRaised, Quantum.Hover, Quantum.Panel)
         overflowButton.MouseButton1Click:Connect(function(...)
