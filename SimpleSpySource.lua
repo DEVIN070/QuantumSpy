@@ -247,8 +247,8 @@ local HEADER_HEIGHT = 64
 local STATUS_HEIGHT = 32
 local SIDEBAR_WIDTH = 270
 local TOOLBAR_HEIGHT = 103
-local MINIMUM_WIDTH = 850
-local MINIMUM_HEIGHT = 520
+local MINIMUM_WIDTH = 460
+local MINIMUM_HEIGHT = 280
 local MAXIMUM_WIDTH = 1200
 local MAXIMUM_HEIGHT = 760
 
@@ -374,7 +374,7 @@ local AccentLine = Create("Frame",{Name = "AccentLine",Parent = Background,Backg
 
 local TopBar = Create("Frame",{Name = "HeaderPane",Parent = Background,BackgroundColor3 = Quantum.Panel,BorderSizePixel = 0,Position = UDim2.fromOffset(9, 9),Size = UDim2.new(1, -18, 0, HEADER_HEIGHT - 20),ZIndex = 4})
 PixelBorder.create(TopBar, Quantum.Border, 5)
-Create("Frame",{Name = "HeaderDivider",Parent = Background,BackgroundColor3 = Quantum.Border,BorderSizePixel = 0,Position = UDim2.new(0, 9, 0, HEADER_HEIGHT - 1),Size = UDim2.new(1, -18, 0, 1),ZIndex = 4})
+local HeaderDivider = Create("Frame",{Name = "HeaderDivider",Parent = Background,BackgroundColor3 = Quantum.Border,BorderSizePixel = 0,Position = UDim2.new(0, 9, 0, HEADER_HEIGHT - 1),Size = UDim2.new(1, -18, 0, 1),ZIndex = 4})
 local BrandMark = Create("TextLabel",{Name = "QuantumMark",Parent = TopBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(13, 5),Size = UDim2.fromOffset(20, 20),Font = Enum.Font.Code,Text = "◇",TextColor3 = Quantum.Accent,TextSize = 18,ZIndex = 6})
 local Simple = Create("TextButton",{Parent = TopBar,BackgroundTransparency = 1,AutoButtonColor = false,Position = UDim2.fromOffset(39, 2),Size = UDim2.fromOffset(132, 24),Font = Enum.Font.Code,Text = "SIMPLESPY",TextColor3 = Quantum.Text,TextSize = 16,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 6})
 local Subtitle = Create("TextLabel",{Name = "Subtitle",Parent = TopBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(40, 27),Size = UDim2.fromOffset(250, 15),Font = Enum.Font.Code,Text = "quantum / remote inspector",TextColor3 = Quantum.TextSecondary,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 6})
@@ -384,6 +384,9 @@ local SpyStatusText = Create("TextLabel",{Name = "SpyStatusText",Parent = TopBar
 local CloseButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Quantum.Panel,BorderSizePixel = 0,Position = UDim2.new(1, -35, 0, 11),Size = UDim2.fromOffset(25, 25),Font = Enum.Font.Code,Text = "×",TextColor3 = Quantum.Text,TextSize = 16,ZIndex = 6})
 local MaximizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Quantum.Panel,BorderSizePixel = 0,Position = UDim2.new(1, -65, 0, 11),Size = UDim2.fromOffset(25, 25),Font = Enum.Font.Code,Text = "□",TextColor3 = Quantum.Text,TextSize = 13,ZIndex = 6})
 local MinimizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Quantum.Panel,BorderSizePixel = 0,Position = UDim2.new(1, -95, 0, 11),Size = UDim2.fromOffset(25, 25),Font = Enum.Font.Code,Text = "–",TextColor3 = Quantum.Text,TextSize = 14,ZIndex = 6})
+local SidebarToggle = Create("TextButton",{Name = "SidebarToggle",Parent = TopBar,BackgroundColor3 = Quantum.Panel,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 5),Size = UDim2.fromOffset(24, 24),Font = Enum.Font.Code,Text = "≡",TextColor3 = Quantum.TextSecondary,TextSize = 16,ZIndex = 7,Visible = false,AutoButtonColor = false})
+addCorner(SidebarToggle, 2)
+styleButton(SidebarToggle, Quantum.Panel, Quantum.Hover, Quantum.Surface)
 for _, button in next, {CloseButton, MaximizeButton, MinimizeButton} do
     addCorner(button, 2)
     styleButton(button, Quantum.Panel, Quantum.Hover, Quantum.Surface)
@@ -407,6 +410,16 @@ local LogList = Create("ScrollingFrame",{Parent = LogSurface,Active = true,Backg
 local UIListLayout = Create("UIListLayout",{Parent = LogList,HorizontalAlignment = Enum.HorizontalAlignment.Center,SortOrder = Enum.SortOrder.LayoutOrder,Padding = UDim.new(0, 2)})
 
 local RightPanel = Create("CanvasGroup",{Name = "Frame",Parent = Background,BackgroundColor3 = Quantum.Background,BorderSizePixel = 0,Position = UDim2.fromOffset(SIDEBAR_WIDTH, HEADER_HEIGHT),Size = UDim2.new(1, -SIDEBAR_WIDTH, 1, -HEADER_HEIGHT - STATUS_HEIGHT)})
+local InspectorTabs = Create("Frame",{Name = "InspectorTabs",Parent = RightPanel,BackgroundColor3 = Quantum.Panel,BorderSizePixel = 0,Position = UDim2.fromOffset(9, 4),Size = UDim2.new(1, -19, 0, 26),Visible = false,ZIndex = 8})
+PixelBorder.create(InspectorTabs, Quantum.BorderSubtle, 9)
+local InspectorTabButtons = {}
+local InspectorTabAccents = {}
+for index, tabName in next, {"Remote", "Args", "Code"} do
+    local tabButton = Create("TextButton",{Name = tabName,Parent = InspectorTabs,BackgroundColor3 = Quantum.Panel,BorderSizePixel = 0,Position = UDim2.fromOffset((index - 1) * 100, 1),Size = UDim2.fromOffset(100, 24),AutoButtonColor = false,Font = Enum.Font.Code,Text = string.upper(tabName),TextColor3 = Quantum.TextMuted,TextSize = 10,ZIndex = 10})
+    local tabAccent = Create("Frame",{Parent = tabButton,BackgroundColor3 = Quantum.Accent,BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.new(0, 4, 1, -2),Size = UDim2.new(1, -8, 0, 1),ZIndex = 11})
+    InspectorTabButtons[tabName] = tabButton
+    InspectorTabAccents[tabName] = tabAccent
+end
 local InspectorHeader = createSection(RightPanel, "remote", UDim2.fromOffset(9, 8), UDim2.new(1, -19, 0, 74))
 local InspectorSelection = Create("TextLabel",{Name = "Selection",Parent = InspectorHeader,BackgroundColor3 = InspectorHeader.BackgroundColor3,BorderSizePixel = 0,Position = UDim2.new(1, -147, 0, -5),Size = UDim2.fromOffset(134, 13),ZIndex = 6,Font = Enum.Font.Code,Text = "no remote selected",TextColor3 = Quantum.TextMuted,TextSize = 9,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Right})
 local RemoteContent = Create("Frame",{Name = "RemoteContent",Parent = InspectorHeader,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 8),Size = UDim2.new(1, -16, 1, -16),ZIndex = 2})
@@ -445,22 +458,22 @@ local ActionsContent = Create("Frame",{Name = "ActionsContent",Parent = ActionsS
 PixelBorder.create(ActionsContent, Quantum.BorderSubtle, 3)
 local ScrollingFrame = Create("ScrollingFrame",{Parent = ActionsContent,Active = true,BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.fromOffset(3, 3),Size = UDim2.new(1, -6, 1, -6),CanvasSize = UDim2.new(),ScrollingDirection = Enum.ScrollingDirection.Y,ScrollBarThickness = 2,ScrollBarImageColor3 = Quantum.TextVeryMuted})
 local UIGridLayout = Create("UIGridLayout",{Parent = ScrollingFrame,FillDirection = Enum.FillDirection.Horizontal,FillDirectionMaxCells = 5,HorizontalAlignment = Enum.HorizontalAlignment.Left,VerticalAlignment = Enum.VerticalAlignment.Top,SortOrder = Enum.SortOrder.LayoutOrder,CellPadding = UDim2.fromOffset(6, 6),CellSize = UDim2.new(0.2, -6, 0, 28)})
-Create("UIPadding",{Parent = ScrollingFrame,PaddingLeft = UDim.new(0, 3),PaddingRight = UDim.new(0, 3),PaddingTop = UDim.new(0, 3),PaddingBottom = UDim.new(0, 3)})
+local ActionsPadding = Create("UIPadding",{Parent = ScrollingFrame,PaddingLeft = UDim.new(0, 3),PaddingRight = UDim.new(0, 3),PaddingTop = UDim.new(0, 3),PaddingBottom = UDim.new(0, 3)})
 
 local StatusBar = Create("CanvasGroup",{Name = "StatusBar",Parent = Background,BackgroundColor3 = Quantum.SurfaceRaised,BorderSizePixel = 0,Position = UDim2.new(0, 9, 1, -STATUS_HEIGHT + 4),Size = UDim2.new(1, -18, 0, STATUS_HEIGHT - 8),ZIndex = 4})
 PixelBorder.create(StatusBar, Quantum.Border, 5)
 local StatusDot = Create("Frame",{Parent = StatusBar,BackgroundColor3 = Quantum.Cyan,BorderSizePixel = 0,Position = UDim2.fromOffset(12, 9),Size = UDim2.fromOffset(6, 6),ZIndex = 6})
 addCorner(StatusDot, 3)
 local StatusVersionText = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(24, 3),Size = UDim2.fromOffset(110, 18),Font = Enum.Font.Code,Text = "quantum@1.0.0",TextColor3 = Quantum.TextSecondary,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 6})
-Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(136, 3),Size = UDim2.fromOffset(10, 18),Font = Enum.Font.Code,Text = "|",TextColor3 = Quantum.TextVeryMuted,TextSize = 10,ZIndex = 6})
+local StatusSeparatorOne = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(136, 3),Size = UDim2.fromOffset(10, 18),Font = Enum.Font.Code,Text = "|",TextColor3 = Quantum.TextVeryMuted,TextSize = 10,ZIndex = 6})
 local StatusStateText = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(150, 3),Size = UDim2.fromOffset(86, 18),Font = Enum.Font.Code,Text = "spy:active",TextColor3 = Quantum.TextMuted,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 6})
-Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(238, 3),Size = UDim2.fromOffset(10, 18),Font = Enum.Font.Code,Text = "|",TextColor3 = Quantum.TextVeryMuted,TextSize = 10,ZIndex = 6})
+local StatusSeparatorTwo = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(238, 3),Size = UDim2.fromOffset(10, 18),Font = Enum.Font.Code,Text = "|",TextColor3 = Quantum.TextVeryMuted,TextSize = 10,ZIndex = 6})
 local StatusCallsText = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(252, 3),Size = UDim2.fromOffset(70, 18),Font = Enum.Font.Code,Text = "calls:0",TextColor3 = Quantum.TextMuted,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 6})
-Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(324, 3),Size = UDim2.fromOffset(10, 18),Font = Enum.Font.Code,Text = "|",TextColor3 = Quantum.TextVeryMuted,TextSize = 10,ZIndex = 6})
+local StatusSeparatorThree = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(324, 3),Size = UDim2.fromOffset(10, 18),Font = Enum.Font.Code,Text = "|",TextColor3 = Quantum.TextVeryMuted,TextSize = 10,ZIndex = 6})
 local StatusRemotesText = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(338, 3),Size = UDim2.fromOffset(92, 18),Font = Enum.Font.Code,Text = "remotes:0",TextColor3 = Quantum.TextMuted,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 6})
 local ReadyText = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.new(1, -66, 0, 3),Size = UDim2.fromOffset(54, 18),Font = Enum.Font.Code,Text = "ready",TextColor3 = Quantum.Cyan,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Right,ZIndex = 6})
 
-local Layout = {SidebarWidth = SIDEBAR_WIDTH, DividerDragging = false}
+local Layout = {SidebarWidth = SIDEBAR_WIDTH, DividerDragging = false, Mode = "Full", UseInspectorTabs = false, InspectorTab = "Remote", SidebarCollapsed = false}
 local Resize = {Active = false, Direction = nil, StartMouse = nil, StartPosition = nil, StartSize = nil}
 local PaneDivider = Create("TextButton",{Name = "PaneDivider",Parent = Background,BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.fromOffset(SIDEBAR_WIDTH - 3, HEADER_HEIGHT),Size = UDim2.new(0, 6, 1, -HEADER_HEIGHT - STATUS_HEIGHT),ZIndex = 10,AutoButtonColor = false,Text = ""})
 local PaneDividerLine = Create("Frame",{Name = "DividerLine",Parent = PaneDivider,BackgroundColor3 = Quantum.BorderSubtle,BorderSizePixel = 0,Position = UDim2.fromOffset(2, 0),Size = UDim2.new(0, 1, 1, 0),ZIndex = 11})
@@ -491,18 +504,28 @@ end
         BackgroundScale = BackgroundScale,
         BackgroundConstraint = BackgroundConstraint,
         TopBar = TopBar,
+        HeaderDivider = HeaderDivider,
+        BrandMark = BrandMark,
+        Subtitle = Subtitle,
         ToggleButton = Simple,
+        SidebarToggle = SidebarToggle,
         SpyStatusDot = SpyStatusDot,
         SpyStatusText = SpyStatusText,
         CloseButton = CloseButton,
         MaximizeButton = MaximizeButton,
         MinimizeButton = MinimizeButton,
         LeftPanel = LeftPanel,
+        FilterSection = FilterSection,
+        SearchFrame = SearchFrame,
         FilterInput = FilterInput,
+        RemoteStreamSection = RemoteStreamSection,
         RemoteCountLabel = RemoteCountLabel,
         LogList = LogList,
         RemoteListLayout = UIListLayout,
         RightPanel = RightPanel,
+        InspectorTabs = InspectorTabs,
+        InspectorTabButtons = InspectorTabButtons,
+        InspectorTabAccents = InspectorTabAccents,
         InspectorHeader = InspectorHeader,
         InspectorSelection = InspectorSelection,
         RemoteNameValue = RemoteNameValue,
@@ -518,13 +541,20 @@ end
         CodeBox = CodeBox,
         CopyCodeButton = CopyCodeButton,
         ActionsSection = ActionsSection,
+        ActionsContent = ActionsContent,
         ActionsScroller = ScrollingFrame,
         ActionsGrid = UIGridLayout,
+        ActionsPadding = ActionsPadding,
         StatusBar = StatusBar,
         StatusDot = StatusDot,
+        StatusVersionText = StatusVersionText,
+        StatusSeparatorOne = StatusSeparatorOne,
         StatusStateText = StatusStateText,
+        StatusSeparatorTwo = StatusSeparatorTwo,
         StatusCallsText = StatusCallsText,
+        StatusSeparatorThree = StatusSeparatorThree,
         StatusRemotesText = StatusRemotesText,
+        ReadyText = ReadyText,
         ToolTip = ToolTip,
         TooltipText = TextLabel,
         ContextMenu = ContextMenu,
@@ -1080,6 +1110,13 @@ end
 function isInDragRange(p)
     local topLeft = UI.TopBar.AbsolutePosition
     local bottomRight = topLeft + UI.TopBar.AbsoluteSize
+    if UI.SidebarToggle.Visible then
+        local toggleTopLeft = UI.SidebarToggle.AbsolutePosition
+        local toggleBottomRight = toggleTopLeft + UI.SidebarToggle.AbsoluteSize
+        if p.X >= toggleTopLeft.X and p.X <= toggleBottomRight.X and p.Y >= toggleTopLeft.Y and p.Y <= toggleBottomRight.Y then
+            return false
+        end
+    end
     return p.X >= topLeft.X and p.X <= bottomRight.X - UI.CloseButton.AbsoluteSize.X * 3 and p.Y >= topLeft.Y and p.Y <= bottomRight.Y
 end
 
@@ -1138,58 +1175,207 @@ function applyResponsiveProperties(object, properties, speed)
     end
 end
 
+function getLayoutMode(width, height)
+    if height <= 340 then
+        return "Thin"
+    elseif width <= 600 then
+        return "Narrow"
+    elseif width < 800 or height < 500 then
+        return "Compact"
+    end
+    return "Full"
+end
+
+function setInspectorTab(tabName)
+    if UI.InspectorTabButtons[tabName] then
+        UI.Layout.InspectorTab = tabName
+        updateResponsiveLayout(0, true)
+    end
+end
+
 --- Centrally lays out the window without rebuilding any logged or generated content.
 function updateResponsiveLayout(speed, preserveSidebarWidth)
     local width = math.round(UI.Background.AbsoluteSize.X)
     local height = math.round(UI.Background.AbsoluteSize.Y)
-    applyResponsiveProperties(UI.TopBar, {Position = UDim2.fromOffset(9, 9), Size = UDim2.fromOffset(width - 18, HEADER_HEIGHT - 20)}, speed)
+    local mode = getLayoutMode(width, height)
+    local useInspectorTabs = mode ~= "Full"
+    local isNarrow = width <= 600
+    local isVeryNarrow = width <= 520
+    local fullHeader = mode == "Full" or closed
+    local headerHeight = fullHeader and HEADER_HEIGHT or mode == "Thin" and 38 or 46
+    local statusHeight = mode == "Full" and STATUS_HEIGHT or mode == "Thin" and 24 or 26
+    local headerInset = fullHeader and 9 or mode == "Thin" and 4 or 5
+    local topBarHeight = headerHeight - headerInset * 2 - 2
+    local controlY = fullHeader and 11 or math.max(3, math.round((topBarHeight - 25) * 0.5))
+
+    UI.Layout.Mode = mode
+    if useInspectorTabs and not UI.Layout.UseInspectorTabs then
+        UI.Layout.InspectorTab = selected and "Code" or "Remote"
+    end
+    UI.Layout.UseInspectorTabs = useInspectorTabs
+    if not isVeryNarrow then
+        UI.Layout.SidebarCollapsed = false
+    end
+
+    applyResponsiveProperties(UI.TopBar, {Position = UDim2.fromOffset(headerInset, headerInset), Size = UDim2.fromOffset(width - headerInset * 2, topBarHeight)}, speed)
+    applyResponsiveProperties(UI.HeaderDivider, {Position = UDim2.fromOffset(headerInset, headerHeight - 1), Size = UDim2.fromOffset(width - headerInset * 2, 1)}, speed)
+    UI.Subtitle.Visible = fullHeader
+    UI.SidebarToggle.Visible = isVeryNarrow and not closed and not sideClosed
+    UI.SidebarToggle.Text = UI.Layout.SidebarCollapsed and "»" or "≡"
+    applyResponsiveProperties(UI.SidebarToggle, {Position = UDim2.fromOffset(8, controlY), Size = UDim2.fromOffset(24, 25)}, speed)
+    local brandX = UI.SidebarToggle.Visible and 35 or 13
+    local titleX = UI.SidebarToggle.Visible and 59 or 39
+    local brandY = fullHeader and 5 or math.max(3, controlY)
+    local titleY = fullHeader and 2 or math.max(1, controlY - 2)
+    applyResponsiveProperties(UI.BrandMark, {Position = UDim2.fromOffset(brandX, brandY), Size = UDim2.fromOffset(20, 20)}, speed)
+    applyResponsiveProperties(UI.ToggleButton, {Position = UDim2.fromOffset(titleX, titleY), Size = UDim2.fromOffset(isVeryNarrow and 108 or 132, 24)}, speed)
+    applyResponsiveProperties(UI.Subtitle, {Position = UDim2.fromOffset(40, 27), Size = UDim2.fromOffset(250, 15)}, speed)
+    applyResponsiveProperties(UI.CloseButton, {Position = UDim2.new(1, -35, 0, controlY), Size = UDim2.fromOffset(25, 25)}, speed)
+    applyResponsiveProperties(UI.MaximizeButton, {Position = UDim2.new(1, -65, 0, controlY), Size = UDim2.fromOffset(25, 25)}, speed)
+    applyResponsiveProperties(UI.MinimizeButton, {Position = UDim2.new(1, -95, 0, controlY), Size = UDim2.fromOffset(25, 25)}, speed)
+    applyResponsiveProperties(UI.SpyStatusDot, {Position = UDim2.new(1, -159, 0, fullHeader and 22 or math.round(topBarHeight * 0.5 - 2)), Size = UDim2.fromOffset(5, 5)}, speed)
+    applyResponsiveProperties(UI.SpyStatusText, {Position = UDim2.new(1, -150, 0, fullHeader and 16 or math.round(topBarHeight * 0.5 - 9)), Size = UDim2.fromOffset(48, 18)}, speed)
 
     if closed or height < MINIMUM_HEIGHT then
         return
     end
 
-    local contentHeight = height - HEADER_HEIGHT - STATUS_HEIGHT
-    applyResponsiveProperties(UI.StatusBar, {Position = UDim2.fromOffset(9, height - STATUS_HEIGHT + 4), Size = UDim2.fromOffset(width - 18, STATUS_HEIGHT - 8)}, speed)
+    local contentHeight = height - headerHeight - statusHeight
+    local statusInset = mode == "Full" and 9 or 5
+    local statusBarHeight = mode == "Full" and statusHeight - 8 or statusHeight - 6
+    local statusTextY = math.max(0, math.round((statusBarHeight - 18) * 0.5))
+    applyResponsiveProperties(UI.StatusBar, {Position = UDim2.fromOffset(statusInset, height - statusHeight + (mode == "Full" and 4 or 3)), Size = UDim2.fromOffset(width - statusInset * 2, statusBarHeight)}, speed)
+
+    local abbreviatedStatus = width <= 600
+    UI.StatusStateText.Visible = not abbreviatedStatus
+    UI.StatusSeparatorTwo.Visible = not abbreviatedStatus
+    UI.StatusRemotesText.Visible = not abbreviatedStatus
+    UI.StatusSeparatorThree.Visible = not abbreviatedStatus
+    applyResponsiveProperties(UI.StatusDot, {Position = UDim2.fromOffset(mode == "Full" and 12 or 10, statusTextY + 6), Size = UDim2.fromOffset(6, 6)}, speed)
+    applyResponsiveProperties(UI.StatusVersionText, {Position = UDim2.fromOffset(mode == "Full" and 24 or 22, statusTextY), Size = UDim2.fromOffset(abbreviatedStatus and 98 or 110, 18)}, speed)
+    applyResponsiveProperties(UI.StatusSeparatorOne, {Position = UDim2.fromOffset(abbreviatedStatus and 121 or 136, statusTextY), Size = UDim2.fromOffset(10, 18)}, speed)
+    applyResponsiveProperties(UI.StatusStateText, {Position = UDim2.fromOffset(150, statusTextY), Size = UDim2.fromOffset(86, 18)}, speed)
+    applyResponsiveProperties(UI.StatusSeparatorTwo, {Position = UDim2.fromOffset(238, statusTextY), Size = UDim2.fromOffset(10, 18)}, speed)
+    applyResponsiveProperties(UI.StatusCallsText, {Position = UDim2.fromOffset(abbreviatedStatus and 135 or 252, statusTextY), Size = UDim2.fromOffset(70, 18)}, speed)
+    applyResponsiveProperties(UI.StatusSeparatorThree, {Position = UDim2.fromOffset(324, statusTextY), Size = UDim2.fromOffset(10, 18)}, speed)
+    applyResponsiveProperties(UI.StatusRemotesText, {Position = UDim2.fromOffset(338, statusTextY), Size = UDim2.fromOffset(92, 18)}, speed)
+    applyResponsiveProperties(UI.ReadyText, {Position = UDim2.new(1, mode == "Full" and -66 or -62, 0, statusTextY), Size = UDim2.fromOffset(mode == "Full" and 54 or 50, 18)}, speed)
+
+    local compactSidebar = mode ~= "Full"
+    local filterTop = compactSidebar and 4 or 12
+    local filterHeight = mode == "Thin" and 28 or compactSidebar and 32 or 42
+    local streamTop = filterTop + filterHeight + (compactSidebar and 5 or 11)
+    local streamBottomInset = compactSidebar and 4 or 10
+    applyResponsiveProperties(UI.FilterSection, {Position = UDim2.fromOffset(compactSidebar and 5 or 9, filterTop), Size = UDim2.new(1, compactSidebar and -10 or -19, 0, filterHeight)}, speed)
+    applyResponsiveProperties(UI.SearchFrame, {Position = UDim2.fromOffset(compactSidebar and 5 or 7, compactSidebar and 7 or 9), Size = UDim2.new(1, compactSidebar and -10 or -14, 1, compactSidebar and -11 or -16)}, speed)
+    UI.FilterInput.PlaceholderText = mode == "Thin" and "search..." or "search remotes..."
+    applyResponsiveProperties(UI.RemoteStreamSection, {Position = UDim2.fromOffset(compactSidebar and 5 or 9, streamTop), Size = UDim2.new(1, compactSidebar and -10 or -19, 0, math.max(44, contentHeight - streamTop - streamBottomInset))}, speed)
+    UI.RemoteCountLabel.Visible = not isNarrow
 
     if sideClosed then
         UI.PaneDivider.Visible = false
-        applyResponsiveProperties(UI.LeftPanel, {Position = UDim2.fromOffset(0, HEADER_HEIGHT), Size = UDim2.fromOffset(width, contentHeight)}, speed)
-        applyResponsiveProperties(UI.RightPanel, {Position = UDim2.fromOffset(width, HEADER_HEIGHT), Size = UDim2.fromOffset(0, contentHeight)}, speed)
+        UI.LeftPanel.Visible = true
+        UI.RightPanel.Visible = false
+        UI.InspectorTabs.Visible = false
+        applyResponsiveProperties(UI.LeftPanel, {Position = UDim2.fromOffset(0, headerHeight), Size = UDim2.fromOffset(width, contentHeight)}, speed)
+        applyResponsiveProperties(UI.RightPanel, {Position = UDim2.fromOffset(width, headerHeight), Size = UDim2.fromOffset(0, contentHeight)}, speed)
         return
     end
 
-    local maximumSidebarWidth = math.min(380, width - 430)
-    local sidebarWidth = preserveSidebarWidth and UI.Layout.SidebarWidth or math.clamp(math.round(width * 0.27), 250, maximumSidebarWidth)
-    sidebarWidth = math.clamp(math.round(sidebarWidth), 250, maximumSidebarWidth)
+    local minimumSidebarWidth = isNarrow and 140 or width < 800 and 180 or 250
+    local maximumSidebarWidth = isNarrow and math.min(270, width - 220) or width < 800 and math.min(300, width - 300) or math.min(380, width - 430)
+    maximumSidebarWidth = math.max(minimumSidebarWidth, maximumSidebarWidth)
+    local targetSidebarWidth = math.round(width * (isNarrow and 0.30 or width < 800 and 0.30 or 0.27))
+    local sidebarWidth = preserveSidebarWidth and UI.Layout.SidebarWidth or targetSidebarWidth
+    sidebarWidth = math.clamp(math.round(sidebarWidth), minimumSidebarWidth, maximumSidebarWidth)
     UI.Layout.SidebarWidth = sidebarWidth
 
-    applyResponsiveProperties(UI.LeftPanel, {Position = UDim2.fromOffset(0, HEADER_HEIGHT), Size = UDim2.fromOffset(sidebarWidth, contentHeight)}, speed)
-    applyResponsiveProperties(UI.RightPanel, {Position = UDim2.fromOffset(sidebarWidth, HEADER_HEIGHT), Size = UDim2.fromOffset(width - sidebarWidth, contentHeight)}, speed)
-    applyResponsiveProperties(UI.PaneDivider, {Position = UDim2.fromOffset(sidebarWidth - 3, HEADER_HEIGHT), Size = UDim2.fromOffset(6, contentHeight)}, speed)
-    UI.PaneDivider.Visible = true
+    local sidebarCollapsed = isVeryNarrow and UI.Layout.SidebarCollapsed
+    local inspectorX = sidebarCollapsed and 0 or sidebarWidth
+    local inspectorWidth = width - inspectorX
+    UI.LeftPanel.Visible = not sidebarCollapsed
+    UI.RightPanel.Visible = true
+    applyResponsiveProperties(UI.LeftPanel, {Position = UDim2.fromOffset(sidebarCollapsed and -sidebarWidth or 0, headerHeight), Size = UDim2.fromOffset(sidebarWidth, contentHeight)}, speed)
+    applyResponsiveProperties(UI.RightPanel, {Position = UDim2.fromOffset(inspectorX, headerHeight), Size = UDim2.fromOffset(inspectorWidth, contentHeight)}, speed)
+    applyResponsiveProperties(UI.PaneDivider, {Position = UDim2.fromOffset(sidebarWidth - 3, headerHeight), Size = UDim2.fromOffset(6, contentHeight)}, speed)
+    UI.PaneDivider.Visible = not sidebarCollapsed
 
-    local topInset = 8
-    local bottomInset = 2
-    local sectionGap = 8
-    local usableHeight = contentHeight - topInset - bottomInset - sectionGap * 3
-    local remoteHeight = math.clamp(math.round(usableHeight * 0.15), 74, 104)
-    local argumentsHeight = math.clamp(math.round(usableHeight * 0.23), 90, 180)
-    local actionsHeight = math.clamp(math.round(usableHeight * 0.20), 93, 116)
-    local codeHeight = usableHeight - remoteHeight - argumentsHeight - actionsHeight
-    local argumentsY = topInset + remoteHeight + sectionGap
-    local codeY = argumentsY + argumentsHeight + sectionGap
-    local actionsY = codeY + codeHeight + sectionGap
-    local rightWidth = width - sidebarWidth - 19
+    local rightWidth = inspectorWidth - 19
+    UI.InspectorTabs.Visible = useInspectorTabs
 
-    applyResponsiveProperties(UI.InspectorHeader, {Position = UDim2.fromOffset(9, topInset), Size = UDim2.fromOffset(rightWidth, remoteHeight)}, speed)
-    applyResponsiveProperties(UI.ArgumentsSection, {Position = UDim2.fromOffset(9, argumentsY), Size = UDim2.fromOffset(rightWidth, argumentsHeight)}, speed)
-    applyResponsiveProperties(UI.CodeSection, {Position = UDim2.fromOffset(9, codeY), Size = UDim2.fromOffset(rightWidth, codeHeight)}, speed)
-    applyResponsiveProperties(UI.ActionsSection, {Position = UDim2.fromOffset(9, actionsY), Size = UDim2.fromOffset(rightWidth, actionsHeight)}, speed)
+    if useInspectorTabs then
+        local tabHeight = 26
+        local panelY = 36
+        local actionsHeight = mode == "Thin" and 48 or 52
+        local actionsY = contentHeight - actionsHeight - 4
+        local panelHeight = math.max(64, actionsY - panelY - 6)
+        applyResponsiveProperties(UI.InspectorTabs, {Position = UDim2.fromOffset(9, 4), Size = UDim2.fromOffset(rightWidth, tabHeight)}, speed)
+
+        local tabsWidth = math.max(3, rightWidth - 2)
+        local baseTabWidth = math.floor(tabsWidth / 3)
+        local tabX = 1
+        for index, tabName in ipairs({"Remote", "Args", "Code"}) do
+            local tabWidth = index == 3 and tabsWidth - baseTabWidth * 2 or baseTabWidth
+            local selectedTab = UI.Layout.InspectorTab == tabName
+            local tabButton = UI.InspectorTabButtons[tabName]
+            tabButton.Position = UDim2.fromOffset(tabX, 1)
+            tabButton.Size = UDim2.fromOffset(tabWidth, tabHeight - 2)
+            tabButton.BackgroundColor3 = selectedTab and Quantum.Selected or Quantum.Panel
+            tabButton.TextColor3 = selectedTab and Quantum.Text or Quantum.TextMuted
+            UI.InspectorTabAccents[tabName].BackgroundTransparency = selectedTab and 0 or 1
+            tabX += tabWidth
+        end
+
+        local selectedTab = UI.Layout.InspectorTab
+        UI.InspectorHeader.Visible = selectedTab == "Remote"
+        UI.ArgumentsSection.Visible = selectedTab == "Args"
+        UI.CodeSection.Visible = selectedTab == "Code"
+        UI.ActionsSection.Visible = true
+        local panelProperties = {Position = UDim2.fromOffset(9, panelY), Size = UDim2.fromOffset(rightWidth, panelHeight)}
+        applyResponsiveProperties(UI.InspectorHeader, panelProperties, speed)
+        applyResponsiveProperties(UI.ArgumentsSection, panelProperties, speed)
+        applyResponsiveProperties(UI.CodeSection, panelProperties, speed)
+        applyResponsiveProperties(UI.ActionsSection, {Position = UDim2.fromOffset(9, actionsY), Size = UDim2.fromOffset(rightWidth, actionsHeight)}, speed)
+        applyResponsiveProperties(UI.ActionsContent, {Position = UDim2.fromOffset(6, 8), Size = UDim2.new(1, -12, 1, -12)}, speed)
+    else
+        UI.InspectorHeader.Visible = true
+        UI.ArgumentsSection.Visible = true
+        UI.CodeSection.Visible = true
+        UI.ActionsSection.Visible = true
+        applyResponsiveProperties(UI.ActionsContent, {Position = UDim2.fromOffset(8, 9), Size = UDim2.new(1, -16, 1, -17)}, speed)
+
+        local topInset = 8
+        local bottomInset = 2
+        local sectionGap = 8
+        local usableHeight = contentHeight - topInset - bottomInset - sectionGap * 3
+        local remoteHeight = math.clamp(math.round(usableHeight * 0.15), 74, 104)
+        local argumentsHeight = math.clamp(math.round(usableHeight * 0.23), 90, 180)
+        local actionsHeight = math.clamp(math.round(usableHeight * 0.20), 93, 116)
+        local codeHeight = usableHeight - remoteHeight - argumentsHeight - actionsHeight
+        local argumentsY = topInset + remoteHeight + sectionGap
+        local codeY = argumentsY + argumentsHeight + sectionGap
+        local actionsY = codeY + codeHeight + sectionGap
+
+        applyResponsiveProperties(UI.InspectorHeader, {Position = UDim2.fromOffset(9, topInset), Size = UDim2.fromOffset(rightWidth, remoteHeight)}, speed)
+        applyResponsiveProperties(UI.ArgumentsSection, {Position = UDim2.fromOffset(9, argumentsY), Size = UDim2.fromOffset(rightWidth, argumentsHeight)}, speed)
+        applyResponsiveProperties(UI.CodeSection, {Position = UDim2.fromOffset(9, codeY), Size = UDim2.fromOffset(rightWidth, codeHeight)}, speed)
+        applyResponsiveProperties(UI.ActionsSection, {Position = UDim2.fromOffset(9, actionsY), Size = UDim2.fromOffset(rightWidth, actionsHeight)}, speed)
+    end
 
     if updateFunctionCanvas then
         updateFunctionCanvas()
     end
 end
+
+for tabName, tabButton in next, UI.InspectorTabButtons do
+    table.insert(connections, tabButton.MouseButton1Click:Connect(function()
+        setInspectorTab(tabName)
+    end))
+end
+table.insert(connections, UI.SidebarToggle.MouseButton1Click:Connect(function()
+    UI.Layout.SidebarCollapsed = not UI.Layout.SidebarCollapsed
+    updateResponsiveLayout(0, true)
+end))
 
 --- Adjusts the ui elements to the expanded layout.
 function maximizeSize(speed)
@@ -1511,6 +1697,10 @@ function eventSelect(selection)
     else
         resetQuantumInspector()
     end
+    if UI.Layout.UseInspectorTabs then
+        UI.Layout.InspectorTab = selected and "Code" or "Remote"
+        updateResponsiveLayout(0, true)
+    end
     updateQuantumStatus()
     if sideClosed then
         toggleSideTray()
@@ -1524,6 +1714,21 @@ function updateFunctionCanvas()
         return
     end
     local gap = 6
+    if UI.Layout.UseInspectorTabs then
+        UI.ActionsScroller.ScrollingDirection = Enum.ScrollingDirection.X
+        UI.ActionsPadding.PaddingTop = UDim.new(0, 0)
+        UI.ActionsPadding.PaddingBottom = UDim.new(0, 0)
+        UI.ActionsGrid.CellPadding = UDim2.fromOffset(gap, 0)
+        UI.ActionsGrid.FillDirectionMaxCells = 100
+        UI.ActionsGrid.CellSize = UDim2.fromOffset(78, 28)
+        UI.ActionsScroller.CanvasSize = UDim2.fromOffset(UI.ActionsGrid.AbsoluteContentSize.X + 6, 0)
+        return
+    end
+
+    UI.ActionsScroller.ScrollingDirection = Enum.ScrollingDirection.Y
+    UI.ActionsPadding.PaddingTop = UDim.new(0, 3)
+    UI.ActionsPadding.PaddingBottom = UDim.new(0, 3)
+    UI.ActionsGrid.CellPadding = UDim2.fromOffset(gap, gap)
     local columns = math.clamp(math.floor((usableWidth + gap) / 86), 1, 5)
     local buttonWidth = math.max(64, math.floor((usableWidth - gap * (columns - 1)) / columns))
     local targetSize = UDim2.fromOffset(buttonWidth, 28)
