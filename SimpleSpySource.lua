@@ -263,13 +263,40 @@ local function addStroke(object, color, transparency)
     return Create("UIStroke", {Parent = object, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Color = color or Quantum.Border, Transparency = transparency or 0, Thickness = 1})
 end
 
-local function addRectBorder(object, color, zIndex)
+local PixelBorder = {}
+
+function PixelBorder.create(object, color, zIndex)
     local borderColor = color or Quantum.Border
     local layer = zIndex or 3
-    Create("Frame", {Name = "BorderTop", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 1), ZIndex = layer})
-    Create("Frame", {Name = "BorderBottom", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, -1), Size = UDim2.new(1, 0, 0, 1), ZIndex = layer})
-    Create("Frame", {Name = "BorderLeft", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Size = UDim2.new(0, 1, 1, 0), ZIndex = layer})
-    Create("Frame", {Name = "BorderRight", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Position = UDim2.new(1, -1, 0, 0), Size = UDim2.new(0, 1, 1, 0), ZIndex = layer})
+    local edges = {
+        Create("Frame", {Name = "BorderTop", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(1, 0, 0, 1), ZIndex = layer}),
+        Create("Frame", {Name = "BorderBottom", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, -1), Size = UDim2.new(1, 0, 0, 1), ZIndex = layer}),
+        Create("Frame", {Name = "BorderLeft", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(0, 1, 1, 0), ZIndex = layer}),
+        Create("Frame", {Name = "BorderRight", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Position = UDim2.new(1, -1, 0, 0), Size = UDim2.new(0, 1, 1, 0), ZIndex = layer})
+    }
+    return edges
+end
+
+function PixelBorder.fieldset(object, legendX, titleWidth, color, zIndex)
+    local borderColor = color or Quantum.Border
+    local layer = zIndex or 3
+    return {
+        Create("Frame", {Name = "BorderTopLeft", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.fromOffset(legendX - 4, 1), ZIndex = layer}),
+        Create("Frame", {Name = "BorderTopRight", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Position = UDim2.fromOffset(legendX + titleWidth, 0), Size = UDim2.new(1, -legendX - titleWidth, 0, 1), ZIndex = layer}),
+        Create("Frame", {Name = "BorderBottom", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, -1), Size = UDim2.new(1, 0, 0, 1), ZIndex = layer}),
+        Create("Frame", {Name = "BorderLeft", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(0, 1, 1, 0), ZIndex = layer}),
+        Create("Frame", {Name = "BorderRight", Parent = object, BackgroundColor3 = borderColor, BorderSizePixel = 0, Position = UDim2.new(1, -1, 0, 0), Size = UDim2.new(0, 1, 1, 0), ZIndex = layer})
+    }
+end
+
+function PixelBorder.setColor(edges, color, duration)
+    for _, edge in next, edges do
+        if duration then
+            quantumTween(edge, {BackgroundColor3 = color}, duration)
+        else
+            edge.BackgroundColor3 = color
+        end
+    end
 end
 
 local function styleButton(button, normalColor, hoverColor, pressedColor)
@@ -292,11 +319,7 @@ local function createSection(parent, name, position, size)
     local section = Create("Frame", {Name = name .. "Section", Parent = parent, BackgroundColor3 = Quantum.Panel, BorderSizePixel = 0, Position = position, Size = size})
     local titleWidth = math.max(52, #name * 7 + 12)
     local legendX = 12
-    Create("Frame", {Name = "BorderTopLeft", Parent = section, BackgroundColor3 = Quantum.Border, BorderSizePixel = 0, Size = UDim2.fromOffset(legendX - 4, 1), ZIndex = 3})
-    Create("Frame", {Name = "BorderTopRight", Parent = section, BackgroundColor3 = Quantum.Border, BorderSizePixel = 0, Position = UDim2.fromOffset(legendX + titleWidth, 0), Size = UDim2.new(1, -legendX - titleWidth, 0, 1), ZIndex = 3})
-    Create("Frame", {Name = "BorderBottom", Parent = section, BackgroundColor3 = Quantum.Border, BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, -1), Size = UDim2.new(1, 0, 0, 1), ZIndex = 3})
-    Create("Frame", {Name = "BorderLeft", Parent = section, BackgroundColor3 = Quantum.Border, BorderSizePixel = 0, Size = UDim2.new(0, 1, 1, 0), ZIndex = 3})
-    Create("Frame", {Name = "BorderRight", Parent = section, BackgroundColor3 = Quantum.Border, BorderSizePixel = 0, Position = UDim2.new(1, -1, 0, 0), Size = UDim2.new(0, 1, 1, 0), ZIndex = 3})
+    PixelBorder.fieldset(section, legendX, titleWidth, Quantum.Border, 3)
     local sectionLabel = Create("TextLabel", {Name = "SectionLabel", Parent = section, BackgroundColor3 = section.BackgroundColor3, BorderSizePixel = 0, Position = UDim2.fromOffset(legendX, -8), Size = UDim2.fromOffset(titleWidth, 16), ZIndex = 5, Font = Enum.Font.Code, Text = lower(name), TextColor3 = Quantum.TextSecondary, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center})
     section:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
         if sectionLabel.Parent then
@@ -316,7 +339,7 @@ local function createToolbarButton(parent, name, isPrimary)
     local template = Create("Frame", {Name = "FunctionTemplate", Parent = parent, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 28)})
     local button = Create("TextButton", {Name = "Button", Parent = template, BackgroundColor3 = Quantum.SurfaceRaised, BackgroundTransparency = 0, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), AutoButtonColor = false, Font = Enum.Font.Code, Text = lower(name), TextColor3 = Quantum.TextSecondary, TextSize = 9, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 4})
     addCorner(button, 2)
-    local stroke = addStroke(button, isPrimary and Quantum.Accent or Quantum.Border, isPrimary and 0.2 or 0)
+    local stroke = addStroke(button, isPrimary and Quantum.Accent or Quantum.Border, 0)
     styleButton(button, Quantum.SurfaceRaised, Quantum.Hover, Quantum.Panel)
     return template, button, button, stroke
 end
@@ -333,14 +356,14 @@ end
 Background:GetPropertyChangedSignal("Position"):Connect(syncWindowShadow)
 Background:GetPropertyChangedSignal("Size"):Connect(syncWindowShadow)
 syncWindowShadow()
-local BackgroundScale = Create("UIScale",{Parent = Background,Scale = 0.985})
+local BackgroundScale = Create("UIScale",{Parent = Background,Scale = 1})
 addCorner(Background, 4)
-addRectBorder(Background, Quantum.Border, 7)
+PixelBorder.create(Background, Quantum.Border, 7)
 local BackgroundConstraint = Create("UISizeConstraint",{Parent = Background,MinSize = Vector2.new(MINIMUM_WIDTH, MINIMUM_HEIGHT)})
-local AccentLine = Create("Frame",{Name = "AccentLine",Parent = Background,BackgroundColor3 = Quantum.Accent,BorderSizePixel = 0,Position = UDim2.fromOffset(1, 0),Size = UDim2.new(1, -2, 0, 2),ZIndex = 8})
+local AccentLine = Create("Frame",{Name = "AccentLine",Parent = Background,BackgroundColor3 = Quantum.Accent,BorderSizePixel = 0,Position = UDim2.fromOffset(1, 1),Size = UDim2.new(1, -2, 0, 1),ZIndex = 8})
 
 local TopBar = Create("Frame",{Name = "HeaderPane",Parent = Background,BackgroundColor3 = Quantum.Panel,BorderSizePixel = 0,Position = UDim2.fromOffset(9, 9),Size = UDim2.new(1, -18, 0, HEADER_HEIGHT - 20),ZIndex = 4})
-addRectBorder(TopBar, Quantum.Border, 5)
+PixelBorder.create(TopBar, Quantum.Border, 5)
 Create("Frame",{Name = "HeaderDivider",Parent = Background,BackgroundColor3 = Quantum.Border,BorderSizePixel = 0,Position = UDim2.new(0, 9, 0, HEADER_HEIGHT - 1),Size = UDim2.new(1, -18, 0, 1),ZIndex = 4})
 local BrandMark = Create("TextLabel",{Name = "QuantumMark",Parent = TopBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(13, 5),Size = UDim2.fromOffset(20, 20),Font = Enum.Font.Code,Text = "◇",TextColor3 = Quantum.Accent,TextSize = 18,ZIndex = 6})
 local Simple = Create("TextButton",{Parent = TopBar,BackgroundTransparency = 1,AutoButtonColor = false,Position = UDim2.fromOffset(39, 2),Size = UDim2.fromOffset(132, 24),Font = Enum.Font.Code,Text = "SIMPLESPY",TextColor3 = Quantum.Text,TextSize = 16,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 6})
@@ -357,27 +380,27 @@ for _, button in next, {CloseButton, MaximizeButton, MinimizeButton} do
 end
 
 local LeftPanel = Create("CanvasGroup",{Name = "Frame",Parent = Background,BackgroundColor3 = Quantum.Background,BorderSizePixel = 0,Position = UDim2.fromOffset(0, HEADER_HEIGHT),Size = UDim2.new(0, SIDEBAR_WIDTH, 1, -HEADER_HEIGHT - STATUS_HEIGHT)})
-Create("Frame",{Name = "SidebarDivider",Parent = LeftPanel,BackgroundColor3 = Quantum.BorderSubtle,BorderSizePixel = 0,Position = UDim2.new(1, -1, 0, 0),Size = UDim2.new(0, 1, 1, 0),ZIndex = 3})
 local FilterSection = createSection(LeftPanel, "filter", UDim2.fromOffset(9, 12), UDim2.new(1, -19, 0, 42))
 local SearchFrame = Create("Frame",{Name = "Filter",Parent = FilterSection,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(7, 9),Size = UDim2.new(1, -14, 1, -16),ZIndex = 6})
 addCorner(SearchFrame, 2)
-local SearchStroke = addStroke(SearchFrame, Quantum.Border)
+local SearchBorder = PixelBorder.create(SearchFrame, Quantum.Border, 7)
 local SearchGlyph = Create("TextLabel",{Parent = SearchFrame,BackgroundTransparency = 1,Position = UDim2.fromOffset(7, 0),Size = UDim2.new(0, 15, 1, 0),Font = Enum.Font.Code,Text = ">",TextColor3 = Quantum.Accent,TextSize = 12,TextYAlignment = Enum.TextYAlignment.Center,ZIndex = 7})
 local FilterInput = Create("TextBox",{Name = "FilterInput",Parent = SearchFrame,BackgroundTransparency = 1,ClearTextOnFocus = false,PlaceholderText = "search remotes...",PlaceholderColor3 = Quantum.TextMuted,Position = UDim2.fromOffset(22, 0),Size = UDim2.new(1, -58, 1, 0),Font = Enum.Font.Code,Text = "",TextColor3 = Quantum.Text,TextSize = 11,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 7})
 local FilterShortcut = Create("TextLabel",{Parent = SearchFrame,BackgroundTransparency = 1,Position = UDim2.new(1, -36, 0, 0),Size = UDim2.new(0, 31, 1, 0),Font = Enum.Font.Code,Text = "^F",TextColor3 = Quantum.TextVeryMuted,TextSize = 9,TextYAlignment = Enum.TextYAlignment.Center,ZIndex = 7})
-FilterInput.Focused:Connect(function() quantumTween(SearchStroke, {Color = Quantum.Accent}, 0.12) end)
-FilterInput.FocusLost:Connect(function() quantumTween(SearchStroke, {Color = Quantum.Border}, 0.12) end)
+FilterInput.Focused:Connect(function() PixelBorder.setColor(SearchBorder, Quantum.Accent, 0.12) end)
+FilterInput.FocusLost:Connect(function() PixelBorder.setColor(SearchBorder, Quantum.Border, 0.12) end)
 local RemoteStreamSection = createSection(LeftPanel, "remote stream", UDim2.fromOffset(9, 65), UDim2.new(1, -19, 1, -75))
 local RemoteCountLabel = Create("TextLabel",{Name = "RemoteCount",Parent = RemoteStreamSection,BackgroundColor3 = RemoteStreamSection.BackgroundColor3,BorderSizePixel = 0,Position = UDim2.new(1, -72, 0, -8),Size = UDim2.fromOffset(62, 16),ZIndex = 6,Font = Enum.Font.Code,Text = "0 calls",TextColor3 = Quantum.TextMuted,TextSize = 9,TextXAlignment = Enum.TextXAlignment.Right})
-local LogList = Create("ScrollingFrame",{Parent = RemoteStreamSection,Active = true,BackgroundColor3 = Quantum.InnerSurface,BackgroundTransparency = 0,BorderSizePixel = 0,Position = UDim2.fromOffset(7, 10),Size = UDim2.new(1, -14, 1, -18),CanvasSize = UDim2.new(),ScrollBarThickness = 2,ScrollBarImageColor3 = Quantum.TextVeryMuted})
-addStroke(LogList, Quantum.BorderSubtle)
+local LogSurface = Create("Frame",{Name = "RemoteListSurface",Parent = RemoteStreamSection,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(7, 10),Size = UDim2.new(1, -14, 1, -18),ZIndex = 2})
+PixelBorder.create(LogSurface, Quantum.BorderSubtle, 3)
+local LogList = Create("ScrollingFrame",{Parent = LogSurface,Active = true,BackgroundColor3 = Quantum.InnerSurface,BackgroundTransparency = 0,BorderSizePixel = 0,Position = UDim2.fromOffset(1, 1),Size = UDim2.new(1, -2, 1, -2),CanvasSize = UDim2.new(),ScrollBarThickness = 2,ScrollBarImageColor3 = Quantum.TextVeryMuted,ZIndex = 2})
 local UIListLayout = Create("UIListLayout",{Parent = LogList,HorizontalAlignment = Enum.HorizontalAlignment.Center,SortOrder = Enum.SortOrder.LayoutOrder,Padding = UDim.new(0, 2)})
 
 local RightPanel = Create("CanvasGroup",{Name = "Frame",Parent = Background,BackgroundColor3 = Quantum.Background,BorderSizePixel = 0,Position = UDim2.fromOffset(SIDEBAR_WIDTH, HEADER_HEIGHT),Size = UDim2.new(1, -SIDEBAR_WIDTH, 1, -HEADER_HEIGHT - STATUS_HEIGHT)})
 local InspectorHeader = createSection(RightPanel, "remote", UDim2.fromOffset(9, 8), UDim2.new(1, -19, 0, 74))
 local InspectorSelection = Create("TextLabel",{Name = "Selection",Parent = InspectorHeader,BackgroundColor3 = InspectorHeader.BackgroundColor3,BorderSizePixel = 0,Position = UDim2.new(1, -146, 0, -8),Size = UDim2.fromOffset(134, 16),ZIndex = 6,Font = Enum.Font.Code,Text = "no remote selected",TextColor3 = Quantum.TextMuted,TextSize = 9,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Right})
 local RemoteContent = Create("Frame",{Name = "RemoteContent",Parent = InspectorHeader,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 8),Size = UDim2.new(1, -16, 1, -12),ZIndex = 2})
-addStroke(RemoteContent, Quantum.BorderSubtle)
+PixelBorder.create(RemoteContent, Quantum.BorderSubtle, 3)
 local InspectorProperties = Create("Frame",{Parent = RemoteContent,BackgroundTransparency = 1,Position = UDim2.fromOffset(8, 1),Size = UDim2.new(1, -16, 1, -2),ZIndex = 3})
 Create("UIListLayout",{Parent = InspectorProperties,SortOrder = Enum.SortOrder.LayoutOrder})
 local RemoteNameValue = createInspectorRow(InspectorProperties, "NAME", Quantum.TextSecondary, 1)
@@ -389,8 +412,9 @@ local RemoteScriptValue = createInspectorRow(InspectorProperties, "SCRIPT", Quan
 RemoteCallsValue.Text = "0"
 
 local ArgumentsSection = createSection(RightPanel, "arguments", UDim2.fromOffset(9, 90), UDim2.new(1, -19, 0, 116))
-local ArgumentsScroll = Create("ScrollingFrame",{Parent = ArgumentsSection,Active = true,AutomaticCanvasSize = Enum.AutomaticSize.Y,BackgroundColor3 = Quantum.InnerSurface,BackgroundTransparency = 0,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 9),Size = UDim2.new(1, -16, 1, -17),CanvasSize = UDim2.new(),ScrollBarThickness = 2,ScrollBarImageColor3 = Quantum.TextVeryMuted,ZIndex = 2})
-addStroke(ArgumentsScroll, Quantum.BorderSubtle)
+local ArgumentsSurface = Create("Frame",{Name = "ArgumentsSurface",Parent = ArgumentsSection,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 9),Size = UDim2.new(1, -16, 1, -17),ZIndex = 2})
+PixelBorder.create(ArgumentsSurface, Quantum.BorderSubtle, 3)
+local ArgumentsScroll = Create("ScrollingFrame",{Parent = ArgumentsSurface,Active = true,AutomaticCanvasSize = Enum.AutomaticSize.Y,BackgroundColor3 = Quantum.InnerSurface,BackgroundTransparency = 0,BorderSizePixel = 0,Position = UDim2.fromOffset(1, 1),Size = UDim2.new(1, -2, 1, -2),CanvasSize = UDim2.new(),ScrollBarThickness = 2,ScrollBarImageColor3 = Quantum.TextVeryMuted,ZIndex = 2})
 local ArgumentsText = Create("TextLabel",{Name = "ArgumentsEmpty",Parent = ArgumentsScroll,BackgroundTransparency = 1,LayoutOrder = 0,Size = UDim2.new(1, -12, 0, 18),Font = Enum.Font.Code,Text = "no arguments",TextColor3 = Quantum.TextMuted,TextSize = 10,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Left,TextYAlignment = Enum.TextYAlignment.Center,ZIndex = 4})
 Create("UIListLayout",{Parent = ArgumentsScroll,HorizontalAlignment = Enum.HorizontalAlignment.Left,SortOrder = Enum.SortOrder.LayoutOrder,Padding = UDim.new(0, 1)})
 Create("UIPadding",{Parent = ArgumentsScroll,PaddingLeft = UDim.new(0, 6),PaddingRight = UDim.new(0, 6),PaddingTop = UDim.new(0, 5),PaddingBottom = UDim.new(0, 5)})
@@ -401,18 +425,18 @@ addCorner(CopyCodeButton, 2)
 addStroke(CopyCodeButton, Quantum.Border)
 styleButton(CopyCodeButton, Quantum.InnerSurface, Quantum.Hover, Quantum.Panel)
 local CodeSurface = Create("Frame",{Name = "EditorSurface",Parent = CodeSection,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 29),Size = UDim2.new(1, -16, 1, -37),ZIndex = 2})
-addStroke(CodeSurface, Quantum.BorderSubtle)
+PixelBorder.create(CodeSurface, Quantum.BorderSubtle, 3)
 local CodeBox = Create("Frame",{Parent = CodeSurface,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.fromOffset(1, 1),Size = UDim2.new(1, -2, 1, -2),ClipsDescendants = true,ZIndex = 4})
 
 local ActionsSection = createSection(RightPanel, "actions", UDim2.new(0, 9, 1, -95), UDim2.new(1, -19, 0, TOOLBAR_HEIGHT - 10))
 local ActionsContent = Create("Frame",{Name = "ActionsContent",Parent = ActionsSection,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 9),Size = UDim2.new(1, -16, 1, -17)})
-addStroke(ActionsContent, Quantum.BorderSubtle)
+PixelBorder.create(ActionsContent, Quantum.BorderSubtle, 3)
 local ScrollingFrame = Create("ScrollingFrame",{Parent = ActionsContent,Active = true,BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.fromOffset(3, 3),Size = UDim2.new(1, -6, 1, -6),CanvasSize = UDim2.new(),ScrollingDirection = Enum.ScrollingDirection.Y,ScrollBarThickness = 2,ScrollBarImageColor3 = Quantum.TextVeryMuted})
 local UIGridLayout = Create("UIGridLayout",{Parent = ScrollingFrame,FillDirection = Enum.FillDirection.Horizontal,FillDirectionMaxCells = 5,HorizontalAlignment = Enum.HorizontalAlignment.Left,VerticalAlignment = Enum.VerticalAlignment.Top,SortOrder = Enum.SortOrder.LayoutOrder,CellPadding = UDim2.fromOffset(6, 6),CellSize = UDim2.new(0.2, -6, 0, 28)})
 Create("UIPadding",{Parent = ScrollingFrame,PaddingLeft = UDim.new(0, 3),PaddingRight = UDim.new(0, 3),PaddingTop = UDim.new(0, 3),PaddingBottom = UDim.new(0, 3)})
 
 local StatusBar = Create("CanvasGroup",{Name = "StatusBar",Parent = Background,BackgroundColor3 = Quantum.SurfaceRaised,BorderSizePixel = 0,Position = UDim2.new(0, 9, 1, -STATUS_HEIGHT + 4),Size = UDim2.new(1, -18, 0, STATUS_HEIGHT - 8),ZIndex = 4})
-addRectBorder(StatusBar, Quantum.Border, 5)
+PixelBorder.create(StatusBar, Quantum.Border, 5)
 local StatusDot = Create("Frame",{Parent = StatusBar,BackgroundColor3 = Quantum.Cyan,BorderSizePixel = 0,Position = UDim2.fromOffset(12, 9),Size = UDim2.fromOffset(6, 6),ZIndex = 6})
 addCorner(StatusDot, 3)
 local StatusVersionText = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.fromOffset(24, 3),Size = UDim2.fromOffset(110, 18),Font = Enum.Font.Code,Text = "quantum@1.0.0",TextColor3 = Quantum.TextSecondary,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Left,ZIndex = 6})
@@ -430,17 +454,18 @@ local PaneDividerLine = Create("Frame",{Name = "DividerLine",Parent = PaneDivide
 
 local ToolTip = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Quantum.SurfaceRaised,BackgroundTransparency = 0.04,BorderSizePixel = 0,Size = UDim2.fromOffset(200, 50),ZIndex = 20,Visible = false})
 addCorner(ToolTip, 2)
-addStroke(ToolTip, Quantum.Border)
+PixelBorder.create(ToolTip, Quantum.Border, 21)
 local TextLabel = Create("TextLabel",{Parent = ToolTip,BackgroundTransparency = 1,Position = UDim2.fromOffset(7, 5),Size = UDim2.new(1, -14, 1, -10),ZIndex = 21,Font = Enum.Font.Code,Text = "",TextColor3 = Quantum.Text,TextSize = 11,TextWrapped = true,TextXAlignment = Enum.TextXAlignment.Left,TextYAlignment = Enum.TextYAlignment.Top})
 
 local ContextMenu = Create("Frame",{Name = "RemoteContextMenu",Parent = SimpleSpy3,BackgroundColor3 = Quantum.SurfaceRaised,BorderSizePixel = 0,Size = UDim2.fromOffset(166, 205),ZIndex = 30,Visible = false})
 addCorner(ContextMenu, 2)
-addStroke(ContextMenu, Quantum.Border)
-Create("UIListLayout",{Parent = ContextMenu,SortOrder = Enum.SortOrder.LayoutOrder,Padding = UDim.new(0, 1)})
-Create("UIPadding",{Parent = ContextMenu,PaddingLeft = UDim.new(0, 4),PaddingRight = UDim.new(0, 4),PaddingTop = UDim.new(0, 4),PaddingBottom = UDim.new(0, 4)})
+PixelBorder.create(ContextMenu, Quantum.Border, 31)
+local ContextContent = Create("Frame",{Name = "ContextContent",Parent = ContextMenu,BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.fromOffset(1, 1),Size = UDim2.new(1, -2, 1, -2),ZIndex = 31})
+Create("UIListLayout",{Parent = ContextContent,SortOrder = Enum.SortOrder.LayoutOrder,Padding = UDim.new(0, 1)})
+Create("UIPadding",{Parent = ContextContent,PaddingLeft = UDim.new(0, 4),PaddingRight = UDim.new(0, 4),PaddingTop = UDim.new(0, 4),PaddingBottom = UDim.new(0, 4)})
 local ContextButtons = {}
 for order, actionName in next, {"Copy Remote", "Copy Path", "Copy Code", "Get Script", "Function Info", "Exclude", "Block", "Clear"} do
-    local contextButton = Create("TextButton",{Name = actionName,Parent = ContextMenu,BackgroundColor3 = Quantum.SurfaceRaised,BorderSizePixel = 0,LayoutOrder = order,Size = UDim2.new(1, 0, 0, 23),ZIndex = 31,AutoButtonColor = false,Font = Enum.Font.Code,Text = lower(actionName),TextColor3 = Quantum.TextSecondary,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Left})
+    local contextButton = Create("TextButton",{Name = actionName,Parent = ContextContent,BackgroundColor3 = Quantum.SurfaceRaised,BorderSizePixel = 0,LayoutOrder = order,Size = UDim2.new(1, 0, 0, 23),ZIndex = 32,AutoButtonColor = false,Font = Enum.Font.Code,Text = lower(actionName),TextColor3 = Quantum.TextSecondary,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Left})
     Create("UIPadding",{Parent = contextButton,PaddingLeft = UDim.new(0, 8)})
     styleButton(contextButton, Quantum.SurfaceRaised, Quantum.Hover, Quantum.Panel)
     ContextButtons[actionName] = contextButton
@@ -2526,7 +2551,6 @@ end
 local function shutdown()
     if UI.SimpleSpy3.Parent then
         quantumTween(UI.Background, {GroupTransparency = 1}, 0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-        quantumTween(UI.BackgroundScale, {Scale = 0.99}, 0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
         quantumTween(UI.WindowShadow, {ImageTransparency = 1}, 0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
         wait(0.14)
     end
@@ -2604,7 +2628,6 @@ if not getgenv().SimpleSpyExecuted then
         UI.Background.Position = UDim2.new(settledPosition.X.Scale, settledPosition.X.Offset, settledPosition.Y.Scale, settledPosition.Y.Offset + 4)
         UI.SimpleSpy3.Parent = (gethui and gethui()) or (syn and syn.protect_gui and syn.protect_gui(UI.SimpleSpy3)) or CoreGui
         quantumTween(UI.Background, {GroupTransparency = 0, Position = settledPosition}, 0.2, Enum.EasingStyle.Quint)
-        quantumTween(UI.BackgroundScale, {Scale = 1}, 0.2, Enum.EasingStyle.Quint)
         quantumTween(UI.WindowShadow, {ImageTransparency = 0.72}, 0.2, Enum.EasingStyle.Quint)
         updateQuantumStatus()
         logthread(spawn(function()
