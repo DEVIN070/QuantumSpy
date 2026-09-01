@@ -1351,17 +1351,22 @@ local function getRemoteCallCount(log)
     return count
 end
 
---- Runs on MouseButton1Click of an event frame
-function eventSelect(frame)
-    if selected and selected.Log  then
-        styleRemoteRow(selected, false)
-        selected = nil
-    end
-    for _, v in next, logs do
-        if frame == v.Log then
-            selected = v
+--- Selects a captured remote log and populates the inspector.
+--- Accepts the captured log directly; frame lookup remains as a compatibility fallback.
+function eventSelect(selection)
+    local nextSelected = typeof(selection) == "table" and selection.Log and selection or nil
+    if not nextSelected then
+        for _, log in next, logs do
+            if selection == log.Log then
+                nextSelected = log
+                break
+            end
         end
     end
+    if selected and selected.Log and selected ~= nextSelected then
+        styleRemoteRow(selected, false)
+    end
+    selected = nextSelected
     if selected and selected.Log then
         styleRemoteRow(selected, true)
         UI.InspectorSelection.Text = string.format("%s / %s", selected.Name, selected.Method or "remote")
@@ -1529,17 +1534,17 @@ function newRemote(type, data)
     local typeColor = type == "event" and Quantum.Accent or Quantum.Violet
     local methodLabel = type == "event" and "FireServer" or "InvokeServer"
 
-    local RemoteTemplate = Create("Frame",{LayoutOrder = layoutOrderNum,Name = "RemoteTemplate",Parent = UI.LogList,BackgroundTransparency = 1,Size = UDim2.new(1, -2, 0, 36)})
-    local Button = Create("TextButton",{Name = "Button",Parent = RemoteTemplate,BackgroundColor3 = Quantum.InnerSurface,BackgroundTransparency = 1,BorderSizePixel = 0,Size = UDim2.fromScale(1, 1),AutoButtonColor = false,ClipsDescendants = true,Text = ""})
+    local RemoteTemplate = Create("Frame",{LayoutOrder = layoutOrderNum,Name = "RemoteTemplate",Parent = UI.LogList,Active = false,BackgroundTransparency = 1,Size = UDim2.new(1, -2, 0, 36)})
+    local Button = Create("TextButton",{Name = "Button",Parent = RemoteTemplate,Active = true,BackgroundColor3 = Quantum.InnerSurface,BackgroundTransparency = 1,BorderSizePixel = 0,Size = UDim2.fromScale(1, 1),AutoButtonColor = false,ClipsDescendants = true,Text = "",ZIndex = 2})
     addCorner(Button, 2)
     local ButtonScale = Create("UIScale",{Parent = Button,Scale = 1})
-    local SelectionBar = Create("Frame",{Name = "SelectionBar",Parent = RemoteTemplate,BackgroundColor3 = Quantum.Accent,BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.fromOffset(0, 2),Size = UDim2.fromOffset(2, 32),ZIndex = 4})
+    local SelectionBar = Create("Frame",{Name = "SelectionBar",Parent = Button,Active = false,BackgroundColor3 = Quantum.Accent,BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.fromOffset(0, 2),Size = UDim2.fromOffset(2, 32),ZIndex = 4})
     addCorner(SelectionBar, 1)
-    local ColorBar = Create("Frame",{Name = "ColorBar",Parent = RemoteTemplate,BackgroundColor3 = typeColor,BorderSizePixel = 0,Position = UDim2.fromOffset(9, 7),Size = UDim2.fromOffset(6, 6),ZIndex = 3})
+    local ColorBar = Create("Frame",{Name = "ColorBar",Parent = Button,Active = false,BackgroundColor3 = typeColor,BorderSizePixel = 0,Position = UDim2.fromOffset(9, 7),Size = UDim2.fromOffset(6, 6),ZIndex = 3})
     addCorner(ColorBar, 1)
-    local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.fromOffset(22, 1),Size = UDim2.new(1, -80, 0, 16),ZIndex = 2,Font = Enum.Font.Code,Text = remote.Name,TextColor3 = Quantum.Text,TextSize = 11,TextXAlignment = Enum.TextXAlignment.Left})
-    local PathText = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Method",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.fromOffset(22, 18),Size = UDim2.new(1, -34, 0, 13),ZIndex = 2,Font = Enum.Font.Code,Text = methodLabel,TextColor3 = Quantum.TextMuted,TextSize = 9,TextXAlignment = Enum.TextXAlignment.Left})
-    local CountText = Create("TextLabel",{Name = "Count",Parent = RemoteTemplate,BackgroundTransparency = 1,Position = UDim2.new(1, -54, 0, 1),Size = UDim2.fromOffset(44, 16),ZIndex = 3,Font = Enum.Font.Code,Text = "×1",TextColor3 = Quantum.TextMuted,TextSize = 9,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Right})
+    local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = Button,Active = false,BackgroundTransparency = 1,Position = UDim2.fromOffset(22, 1),Size = UDim2.new(1, -80, 0, 16),ZIndex = 3,Font = Enum.Font.Code,Text = remote.Name,TextColor3 = Quantum.Text,TextSize = 11,TextXAlignment = Enum.TextXAlignment.Left})
+    local PathText = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Method",Parent = Button,Active = false,BackgroundTransparency = 1,Position = UDim2.fromOffset(22, 18),Size = UDim2.new(1, -34, 0, 13),ZIndex = 3,Font = Enum.Font.Code,Text = methodLabel,TextColor3 = Quantum.TextMuted,TextSize = 9,TextXAlignment = Enum.TextXAlignment.Left})
+    local CountText = Create("TextLabel",{Name = "Count",Parent = Button,Active = false,BackgroundTransparency = 1,Position = UDim2.new(1, -54, 0, 1),Size = UDim2.fromOffset(44, 16),ZIndex = 3,Font = Enum.Font.Code,Text = "×1",TextColor3 = Quantum.TextMuted,TextSize = 9,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Right})
 
     local log = {
         Name = remote.name,
@@ -1583,13 +1588,13 @@ function newRemote(type, data)
     Button.MouseButton1Up:Connect(function() quantumTween(ButtonScale, {Scale = 1}, 0.08) end)
     local function selectRemote()
         logthread(running())
-        eventSelect(RemoteTemplate)
+        eventSelect(log)
         log.GenScript = genScript(log.Remote, log.args)
         if data.blocked then
             log.GenScript = "-- THIS REMOTE WAS PREVENTED FROM FIRING TO THE SERVER BY SIMPLESPY\n\n" .. log.GenScript
         end
-        if selected == log and RemoteTemplate then
-            eventSelect(RemoteTemplate)
+        if selected == log and RemoteTemplate.Parent then
+            eventSelect(log)
         end
     end
     local connect = Button.MouseButton1Click:Connect(selectRemote)
