@@ -374,9 +374,9 @@ addStroke(LogList, Quantum.BorderSubtle)
 local UIListLayout = Create("UIListLayout",{Parent = LogList,HorizontalAlignment = Enum.HorizontalAlignment.Center,SortOrder = Enum.SortOrder.LayoutOrder,Padding = UDim.new(0, 2)})
 
 local RightPanel = Create("CanvasGroup",{Name = "Frame",Parent = Background,BackgroundColor3 = Quantum.Background,BorderSizePixel = 0,Position = UDim2.fromOffset(SIDEBAR_WIDTH, HEADER_HEIGHT),Size = UDim2.new(1, -SIDEBAR_WIDTH, 1, -HEADER_HEIGHT - STATUS_HEIGHT)})
-local InspectorHeader = createSection(RightPanel, "remote", UDim2.fromOffset(9, 10), UDim2.new(1, -19, 0, 79))
+local InspectorHeader = createSection(RightPanel, "remote", UDim2.fromOffset(9, 8), UDim2.new(1, -19, 0, 74))
 local InspectorSelection = Create("TextLabel",{Name = "Selection",Parent = InspectorHeader,BackgroundColor3 = InspectorHeader.BackgroundColor3,BorderSizePixel = 0,Position = UDim2.new(1, -146, 0, -8),Size = UDim2.fromOffset(134, 16),ZIndex = 6,Font = Enum.Font.Code,Text = "no remote selected",TextColor3 = Quantum.TextMuted,TextSize = 9,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Right})
-local RemoteContent = Create("Frame",{Name = "RemoteContent",Parent = InspectorHeader,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 9),Size = UDim2.new(1, -16, 1, -17),ZIndex = 2})
+local RemoteContent = Create("Frame",{Name = "RemoteContent",Parent = InspectorHeader,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 8),Size = UDim2.new(1, -16, 1, -12),ZIndex = 2})
 addStroke(RemoteContent, Quantum.BorderSubtle)
 local InspectorProperties = Create("Frame",{Parent = RemoteContent,BackgroundTransparency = 1,Position = UDim2.fromOffset(8, 1),Size = UDim2.new(1, -16, 1, -2),ZIndex = 3})
 Create("UIListLayout",{Parent = InspectorProperties,SortOrder = Enum.SortOrder.LayoutOrder})
@@ -388,14 +388,14 @@ local RemotePathValue = createInspectorRow(InspectorProperties, "PATH", Quantum.
 local RemoteScriptValue = createInspectorRow(InspectorProperties, "SCRIPT", Quantum.TextSecondary, 6)
 RemoteCallsValue.Text = "0"
 
-local ArgumentsSection = createSection(RightPanel, "arguments", UDim2.fromOffset(9, 100), UDim2.new(1, -19, 0, 107))
+local ArgumentsSection = createSection(RightPanel, "arguments", UDim2.fromOffset(9, 90), UDim2.new(1, -19, 0, 116))
 local ArgumentsScroll = Create("ScrollingFrame",{Parent = ArgumentsSection,Active = true,AutomaticCanvasSize = Enum.AutomaticSize.Y,BackgroundColor3 = Quantum.InnerSurface,BackgroundTransparency = 0,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 9),Size = UDim2.new(1, -16, 1, -17),CanvasSize = UDim2.new(),ScrollBarThickness = 2,ScrollBarImageColor3 = Quantum.TextVeryMuted,ZIndex = 2})
 addStroke(ArgumentsScroll, Quantum.BorderSubtle)
 local ArgumentsText = Create("TextLabel",{Name = "ArgumentsEmpty",Parent = ArgumentsScroll,BackgroundTransparency = 1,LayoutOrder = 0,Size = UDim2.new(1, -12, 0, 18),Font = Enum.Font.Code,Text = "no arguments",TextColor3 = Quantum.TextMuted,TextSize = 10,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Left,TextYAlignment = Enum.TextYAlignment.Center,ZIndex = 4})
 Create("UIListLayout",{Parent = ArgumentsScroll,HorizontalAlignment = Enum.HorizontalAlignment.Left,SortOrder = Enum.SortOrder.LayoutOrder,Padding = UDim.new(0, 1)})
 Create("UIPadding",{Parent = ArgumentsScroll,PaddingLeft = UDim.new(0, 6),PaddingRight = UDim.new(0, 6),PaddingTop = UDim.new(0, 5),PaddingBottom = UDim.new(0, 5)})
 
-local CodeSection = createSection(RightPanel, "generated code", UDim2.fromOffset(9, 218), UDim2.new(1, -19, 1, -218 - TOOLBAR_HEIGHT - 13))
+local CodeSection = createSection(RightPanel, "generated code", UDim2.fromOffset(9, 214), UDim2.new(1, -19, 1, -214 - TOOLBAR_HEIGHT))
 local CopyCodeButton = Create("TextButton",{Name = "CopyCode",Parent = CodeSection,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.new(1, -76, 0, 7),Size = UDim2.fromOffset(66, 17),ZIndex = 6,AutoButtonColor = false,Font = Enum.Font.Code,Text = "copy code",TextColor3 = Quantum.TextSecondary,TextSize = 9})
 addCorner(CopyCodeButton, 2)
 addStroke(CopyCodeButton, Quantum.Border)
@@ -404,7 +404,7 @@ local CodeSurface = Create("Frame",{Name = "EditorSurface",Parent = CodeSection,
 addStroke(CodeSurface, Quantum.BorderSubtle)
 local CodeBox = Create("Frame",{Parent = CodeSurface,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.fromOffset(1, 1),Size = UDim2.new(1, -2, 1, -2),ClipsDescendants = true,ZIndex = 4})
 
-local ActionsSection = createSection(RightPanel, "actions", UDim2.new(0, 9, 1, -TOOLBAR_HEIGHT - 2), UDim2.new(1, -19, 0, TOOLBAR_HEIGHT - 10))
+local ActionsSection = createSection(RightPanel, "actions", UDim2.new(0, 9, 1, -95), UDim2.new(1, -19, 0, TOOLBAR_HEIGHT - 10))
 local ActionsContent = Create("Frame",{Name = "ActionsContent",Parent = ActionsSection,BackgroundColor3 = Quantum.InnerSurface,BorderSizePixel = 0,Position = UDim2.fromOffset(8, 9),Size = UDim2.new(1, -16, 1, -17)})
 addStroke(ActionsContent, Quantum.BorderSubtle)
 local ScrollingFrame = Create("ScrollingFrame",{Parent = ActionsContent,Active = true,BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.fromOffset(3, 3),Size = UDim2.new(1, -6, 1, -6),CanvasSize = UDim2.new(),ScrollingDirection = Enum.ScrollingDirection.Y,ScrollBarThickness = 2,ScrollBarImageColor3 = Quantum.TextVeryMuted})
@@ -511,6 +511,8 @@ local sideClosed = false
 local maximized = false
 --- The event logs to be read from
 local logs = {}
+--- One visible row per remote identity + method; logs still retains every captured call.
+local remoteGroups = {}
 --- The event currently selected.Log (defaults to nil)
 local selected = nil
 --- The blacklist (can be a string name or the Remote Instance)
@@ -584,15 +586,10 @@ local function resetQuantumInspector()
 end
 
 local function getLiveRemoteCount()
-    local seen = {}
     local count = 0
-    for _, log in next, logs do
-        if log.Log and log.Log.Parent then
-            local key = log.DebugId or log.Remote
-            if key and not seen[key] then
-                seen[key] = true
-                count += 1
-            end
+    for _, group in next, remoteGroups do
+        if group.Row and group.Row.Parent then
+            count += 1
         end
     end
     return count
@@ -614,10 +611,12 @@ end
 
 local function applyRemoteFilter()
     local query = lower(UI.FilterInput.Text)
-    for _, log in next, logs do
-        local remotePath = log.RemotePath or ""
-        if log.Log and log.Log.Parent then
-            log.Log.Visible = query == "" or lower(log.Name):find(query, 1, true) ~= nil or lower(remotePath):find(query, 1, true) ~= nil
+    for _, group in next, remoteGroups do
+        if group.Row and group.Row.Parent then
+            group.Row.Visible = query == ""
+                or lower(group.Name or ""):find(query, 1, true) ~= nil
+                or lower(group.RemotePath or ""):find(query, 1, true) ~= nil
+                or lower(group.Method or ""):find(query, 1, true) ~= nil
         end
     end
     UI.LogList.CanvasSize = UDim2.fromOffset(UI.RemoteListLayout.AbsoluteContentSize.X, UI.RemoteListLayout.AbsoluteContentSize.Y + 6)
@@ -766,6 +765,9 @@ function clean()
             end
             if typeof(v[2]) == "Instance" then
                 v[2]:Destroy()
+            end
+            if v[3] then
+                remoteGroups[v[3]] = nil
             end
         end
         local newLogs = {}
@@ -1346,9 +1348,13 @@ local function renderArgumentTree(args, owner)
 end
 
 local function getRemoteCallCount(log)
+    local group = log and remoteGroups[log.GroupKey]
+    if group and group.Row and group.Row.Parent then
+        return group.count
+    end
     local count = 0
     for _, existing in next, logs do
-        if existing.DebugId == log.DebugId and existing.Log and existing.Log.Parent then
+        if existing.GroupKey == log.GroupKey and existing.Log and existing.Log.Parent then
             count += 1
         end
     end
@@ -1367,7 +1373,7 @@ function eventSelect(selection)
             end
         end
     end
-    if selected and selected.Log and selected ~= nextSelected then
+    if selected and selected.Log and (not nextSelected or selected.Log ~= nextSelected.Log) then
         styleRemoteRow(selected, false)
     end
     selected = nextSelected
@@ -1540,6 +1546,45 @@ function newRemote(type, data)
     local remotePath = remote:GetFullName()
     local typeColor = type == "event" and Quantum.Accent or Quantum.Violet
     local methodLabel = type == "event" and "FireServer" or "InvokeServer"
+    local groupMethod = data.method or methodLabel
+    local groupKey = rawtostring(data.id or remotePath) .. "\0" .. lower(groupMethod)
+
+    local log = {
+        Name = remote.name,
+        Function = data.infofunc or "--Function Info is disabled",
+        Remote = remote,
+        DebugId = data.id,
+        metamethod = data.metamethod,
+        args = data.args,
+        RemotePath = remotePath,
+        Method = groupMethod,
+        Blocked = data.blocked,
+        Source = callingscript,
+        returnvalue = data.returnvalue,
+        GenScript = "-- Generating, please wait...\n-- (If this message persists, the remote args are likely extremely long)",
+        GroupKey = groupKey
+    }
+    logs[#logs + 1] = log
+
+    local group = remoteGroups[groupKey]
+    if group and group.Row and group.Row.Parent then
+        group.latestCall = log
+        group.count += 1
+        log.Log = group.Row
+        log.Button = group.Button
+        log.SelectionBar = group.SelectionBar
+        log.PrimaryText = group.PrimaryText
+        log.MetaText = group.MetaText
+        log.CountText = group.CountText
+        group.CountText.Text = string.format("×%d", group.count)
+        if selected and selected.GroupKey == groupKey then
+            UI.RemoteCallsValue.Text = tostring(group.count)
+        end
+        updateQuantumStatus()
+        return
+    elseif group then
+        remoteGroups[groupKey] = nil
+    end
 
     local RemoteTemplate = Create("Frame",{LayoutOrder = layoutOrderNum,Name = "RemoteTemplate",Parent = UI.LogList,Active = false,BackgroundTransparency = 1,Size = UDim2.new(1, -2, 0, 36)})
     local Button = Create("TextButton",{Name = "Button",Parent = RemoteTemplate,Active = true,BackgroundColor3 = Quantum.InnerSurface,BackgroundTransparency = 1,BorderSizePixel = 0,Size = UDim2.fromScale(1, 1),AutoButtonColor = false,ClipsDescendants = true,Text = "",ZIndex = 2})
@@ -1553,55 +1598,50 @@ function newRemote(type, data)
     local PathText = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Method",Parent = Button,Active = false,BackgroundTransparency = 1,Position = UDim2.fromOffset(22, 18),Size = UDim2.new(1, -34, 0, 13),ZIndex = 3,Font = Enum.Font.Code,Text = methodLabel,TextColor3 = Quantum.TextMuted,TextSize = 9,TextXAlignment = Enum.TextXAlignment.Left})
     local CountText = Create("TextLabel",{Name = "Count",Parent = Button,Active = false,BackgroundTransparency = 1,Position = UDim2.new(1, -54, 0, 1),Size = UDim2.fromOffset(44, 16),ZIndex = 3,Font = Enum.Font.Code,Text = "×1",TextColor3 = Quantum.TextMuted,TextSize = 9,TextTruncate = Enum.TextTruncate.AtEnd,TextXAlignment = Enum.TextXAlignment.Right})
 
-    local log = {
-        Name = remote.name,
-        Function = data.infofunc or "--Function Info is disabled",
-        Remote = remote,
-        DebugId = data.id,
-        metamethod = data.metamethod,
-        args = data.args,
-        Log = RemoteTemplate,
+    log.Log = RemoteTemplate
+    log.Button = Button
+    log.SelectionBar = SelectionBar
+    log.PrimaryText = Text
+    log.MetaText = PathText
+    log.CountText = CountText
+    group = {
+        Row = RemoteTemplate,
         Button = Button,
         SelectionBar = SelectionBar,
         PrimaryText = Text,
         MetaText = PathText,
         CountText = CountText,
+        Name = log.Name,
         RemotePath = remotePath,
-        Method = data.method,
-        Blocked = data.blocked,
-        Source = callingscript,
-        returnvalue = data.returnvalue,
-        GenScript = "-- Generating, please wait...\n-- (If this message persists, the remote args are likely extremely long)"
+        Method = groupMethod,
+        latestCall = log,
+        count = 1
     }
-
-    logs[#logs + 1] = log
-    local remoteCallCount = getRemoteCallCount(log)
-    for _, existing in next, logs do
-        if existing.DebugId == log.DebugId and existing.MetaText then
-            existing.MetaText.Text = existing.Method or methodLabel
-            if existing.CountText then
-                existing.CountText.Text = string.format("×%d", remoteCallCount)
-            end
-        end
-    end
+    remoteGroups[groupKey] = group
     Button.MouseEnter:Connect(function()
-        if selected ~= log then quantumTween(Button, {BackgroundColor3 = Quantum.Hover, BackgroundTransparency = 0}, 0.1) end
+        if not selected or selected.GroupKey ~= groupKey then
+            quantumTween(Button, {BackgroundColor3 = Quantum.Hover, BackgroundTransparency = 0}, 0.1)
+        end
     end)
     Button.MouseLeave:Connect(function()
-        styleRemoteRow(log, selected == log)
+        styleRemoteRow(group.latestCall, selected and selected.GroupKey == groupKey)
         quantumTween(ButtonScale, {Scale = 1}, 0.08)
     end)
     Button.MouseButton1Down:Connect(function() quantumTween(ButtonScale, {Scale = 0.99}, 0.07) end)
     Button.MouseButton1Up:Connect(function() quantumTween(ButtonScale, {Scale = 1}, 0.08) end)
     local function selectRemote()
-        logthread(running())
-        eventSelect(log)
-        log.GenScript = genScript(log.Remote, log.args)
-        if data.blocked then
-            log.GenScript = "-- THIS REMOTE WAS PREVENTED FROM FIRING TO THE SERVER BY SIMPLESPY\n\n" .. log.GenScript
+        local latestCall = group.latestCall
+        if not latestCall then
+            return
         end
-        if selected == log and RemoteTemplate.Parent then
-            eventSelect(log)
+        logthread(running())
+        eventSelect(latestCall)
+        latestCall.GenScript = genScript(latestCall.Remote, latestCall.args)
+        if latestCall.Blocked then
+            latestCall.GenScript = "-- THIS REMOTE WAS PREVENTED FROM FIRING TO THE SERVER BY SIMPLESPY\n\n" .. latestCall.GenScript
+        end
+        if selected == latestCall and RemoteTemplate.Parent then
+            eventSelect(latestCall)
         end
     end
     local connect = Button.MouseButton1Click:Connect(selectRemote)
@@ -1610,7 +1650,7 @@ function newRemote(type, data)
         openContextMenu()
     end)
     layoutOrderNum -= 1
-    table.insert(remoteLogs, 1, {connect, RemoteTemplate})
+    table.insert(remoteLogs, 1, {connect, RemoteTemplate, groupKey})
     clean()
     updateRemoteCanvas()
     applyRemoteFilter()
@@ -2505,6 +2545,7 @@ local function shutdown()
     clear(connections)
     clear(logs)
     clear(remoteLogs)
+    clear(remoteGroups)
     disablehooks()
     UI.SimpleSpy3:Destroy()
     UI.Storage:Destroy()
@@ -2750,6 +2791,7 @@ newButton(
             end
         end
         clear(remoteLogs)
+        clear(remoteGroups)
         selected = nil
         resetQuantumInspector()
         updateRemoteCanvas()
