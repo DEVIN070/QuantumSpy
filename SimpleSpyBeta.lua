@@ -253,6 +253,15 @@ local SIDEBAR_WIDTH = 270
 local TOOLBAR_HEIGHT = 103
 local MINIMUM_WIDTH = 850
 local MINIMUM_HEIGHT = 520
+local MAXIMUM_WIDTH = 1200
+local MAXIMUM_HEIGHT = 760
+
+local function getMaximumWindowSize(viewportSize)
+    return Vector2.new(
+        math.max(MINIMUM_WIDTH, math.min(MAXIMUM_WIDTH, math.round(viewportSize.X - 40))),
+        math.max(MINIMUM_HEIGHT, math.min(MAXIMUM_HEIGHT, math.round(viewportSize.Y - GuiInset.Y - 40)))
+    )
+end
 
 local function quantumTween(object, properties, duration, style, direction)
     local tweenObject = TweenService:Create(object, TweenInfo.new(duration or 0.12, style or Enum.EasingStyle.Quad, direction or Enum.EasingDirection.Out), properties)
@@ -364,7 +373,7 @@ syncWindowShadow()
 local BackgroundScale = Create("UIScale",{Parent = Background,Scale = 1})
 addCorner(Background, 4)
 PixelBorder.create(Background, Quantum.Border, 7)
-local BackgroundConstraint = Create("UISizeConstraint",{Parent = Background,MinSize = Vector2.new(MINIMUM_WIDTH, MINIMUM_HEIGHT)})
+local BackgroundConstraint = Create("UISizeConstraint",{Parent = Background,MinSize = Vector2.new(MINIMUM_WIDTH, MINIMUM_HEIGHT),MaxSize = Vector2.new(MAXIMUM_WIDTH, MAXIMUM_HEIGHT)})
 local AccentLine = Create("Frame",{Name = "AccentLine",Parent = Background,BackgroundColor3 = Quantum.Accent,BorderSizePixel = 0,Position = UDim2.fromOffset(1, 1),Size = UDim2.new(1, -2, 0, 1),ZIndex = 8})
 
 local TopBar = Create("Frame",{Name = "HeaderPane",Parent = Background,BackgroundColor3 = Quantum.Panel,BorderSizePixel = 0,Position = UDim2.fromOffset(9, 9),Size = UDim2.new(1, -18, 0, HEADER_HEIGHT - 20),ZIndex = 4})
@@ -968,10 +977,7 @@ function toggleMinimize(override)
         UI.RightPanel.Visible = not sideClosed
         UI.StatusBar.Visible = true
         local viewportSize = workspace.CurrentCamera.ViewportSize
-        UI.BackgroundConstraint.MaxSize = Vector2.new(
-            math.max(MINIMUM_WIDTH, math.round(viewportSize.X - 8)),
-            math.max(MINIMUM_HEIGHT, math.round(viewportSize.Y - GuiInset.Y - 8))
-        )
+        UI.BackgroundConstraint.MaxSize = getMaximumWindowSize(viewportSize)
         quantumTween(UI.Background, {Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X, expandedWindowHeight)}, 0.18, Enum.EasingStyle.Quint)
         wait(0.12)
         quantumTween(UI.LeftPanel, {GroupTransparency = 0}, 0.14)
@@ -1209,6 +1215,7 @@ function updateWindowResize(mousePosition)
 
     local margin = 4
     local viewportSize = workspace.CurrentCamera.ViewportSize
+    local maximumSize = getMaximumWindowSize(viewportSize)
     local maximumRight = math.round(viewportSize.X - margin)
     local maximumBottom = math.round(viewportSize.Y - GuiInset.Y - margin)
     local delta = mousePosition - resize.StartMouse
@@ -1221,18 +1228,22 @@ function updateWindowResize(mousePosition)
     local height = resize.StartSize.Y
 
     if direction:find("L", 1, true) then
-        x = math.clamp(math.round(resize.StartPosition.X + delta.X), margin, startRight - MINIMUM_WIDTH)
+        local minimumLeft = math.max(margin, startRight - maximumSize.X)
+        x = math.clamp(math.round(resize.StartPosition.X + delta.X), minimumLeft, startRight - MINIMUM_WIDTH)
         width = startRight - x
     elseif direction:find("R", 1, true) then
-        local right = math.clamp(math.round(startRight + delta.X), resize.StartPosition.X + MINIMUM_WIDTH, maximumRight)
+        local allowedRight = math.min(maximumRight, resize.StartPosition.X + maximumSize.X)
+        local right = math.clamp(math.round(startRight + delta.X), resize.StartPosition.X + MINIMUM_WIDTH, allowedRight)
         width = right - resize.StartPosition.X
     end
 
     if direction:find("T", 1, true) then
-        y = math.clamp(math.round(resize.StartPosition.Y + delta.Y), margin, startBottom - MINIMUM_HEIGHT)
+        local minimumTop = math.max(margin, startBottom - maximumSize.Y)
+        y = math.clamp(math.round(resize.StartPosition.Y + delta.Y), minimumTop, startBottom - MINIMUM_HEIGHT)
         height = startBottom - y
     elseif direction:find("B", 1, true) then
-        local bottom = math.clamp(math.round(startBottom + delta.Y), resize.StartPosition.Y + MINIMUM_HEIGHT, maximumBottom)
+        local allowedBottom = math.min(maximumBottom, resize.StartPosition.Y + maximumSize.Y)
+        local bottom = math.clamp(math.round(startBottom + delta.Y), resize.StartPosition.Y + MINIMUM_HEIGHT, allowedBottom)
         height = bottom - resize.StartPosition.Y
     end
 
@@ -1282,13 +1293,14 @@ end))
 function validateSize()
     local margin = 4
     local screenSize = workspace.CurrentCamera.ViewportSize
-    local maximumWidth = math.max(MINIMUM_WIDTH, math.round(screenSize.X - margin * 2))
-    local maximumHeight = math.max(MINIMUM_HEIGHT, math.round(screenSize.Y - GuiInset.Y - margin * 2))
-    UI.BackgroundConstraint.MaxSize = Vector2.new(maximumWidth, closed and HEADER_HEIGHT or maximumHeight)
+    local maximumSize = getMaximumWindowSize(screenSize)
+    UI.BackgroundConstraint.MaxSize = Vector2.new(maximumSize.X, closed and HEADER_HEIGHT or maximumSize.Y)
     local position = UI.Background.AbsolutePosition
-    local width = math.clamp(math.round(UI.Background.AbsoluteSize.X), MINIMUM_WIDTH, math.max(MINIMUM_WIDTH, screenSize.X - margin - position.X))
+    local availableWidth = math.max(MINIMUM_WIDTH, math.min(maximumSize.X, screenSize.X - margin - position.X))
+    local width = math.clamp(math.round(UI.Background.AbsoluteSize.X), MINIMUM_WIDTH, availableWidth)
     local minimumHeight = closed and HEADER_HEIGHT or MINIMUM_HEIGHT
-    local height = math.clamp(math.round(UI.Background.AbsoluteSize.Y), minimumHeight, math.max(minimumHeight, screenSize.Y - GuiInset.Y - margin - position.Y))
+    local availableHeight = math.max(minimumHeight, math.min(maximumSize.Y, screenSize.Y - GuiInset.Y - margin - position.Y))
+    local height = math.clamp(math.round(UI.Background.AbsoluteSize.Y), minimumHeight, availableHeight)
     UI.Background.Size = UDim2.fromOffset(width, height)
 end
 
