@@ -320,6 +320,7 @@ local function createToolbarButton(parent, name, isPrimary)
     return template, button, button, stroke
 end
 
+local function createQuantumUI()
 local SimpleSpy3 = Create("ScreenGui",{ResetOnSpawn = false})
 local Storage = Create("Folder",{})
 local Background = Create("CanvasGroup",{Name = "Frame",Parent = SimpleSpy3,BackgroundColor3 = Quantum.Background,BorderSizePixel = 0,GroupTransparency = 1,Position = UDim2.new(0, 320, 0, 130),Size = UDim2.new(0, 980, 0, 620),ClipsDescendants = true,ZIndex = 2})
@@ -416,6 +417,48 @@ local ToolTip = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Quantum.S
 addCorner(ToolTip, 2)
 addStroke(ToolTip, Quantum.Border)
 local TextLabel = Create("TextLabel",{Parent = ToolTip,BackgroundTransparency = 1,Position = UDim2.fromOffset(7, 5),Size = UDim2.new(1, -14, 1, -10),ZIndex = 21,Font = Enum.Font.Code,Text = "",TextColor3 = Quantum.Text,TextSize = 11,TextWrapped = true,TextXAlignment = Enum.TextXAlignment.Left,TextYAlignment = Enum.TextYAlignment.Top})
+    return {
+        SimpleSpy3 = SimpleSpy3,
+        Storage = Storage,
+        Background = Background,
+        WindowShadow = WindowShadow,
+        BackgroundScale = BackgroundScale,
+        BackgroundConstraint = BackgroundConstraint,
+        TopBar = TopBar,
+        ToggleButton = Simple,
+        SpyStatusDot = SpyStatusDot,
+        SpyStatusText = SpyStatusText,
+        CloseButton = CloseButton,
+        MaximizeButton = MaximizeButton,
+        MinimizeButton = MinimizeButton,
+        LeftPanel = LeftPanel,
+        FilterInput = FilterInput,
+        RemoteCountLabel = RemoteCountLabel,
+        LogList = LogList,
+        RemoteListLayout = UIListLayout,
+        RightPanel = RightPanel,
+        InspectorSelection = InspectorSelection,
+        RemoteNameValue = RemoteNameValue,
+        RemoteTypeValue = RemoteTypeValue,
+        RemoteMethodValue = RemoteMethodValue,
+        RemoteCallsValue = RemoteCallsValue,
+        RemotePathValue = RemotePathValue,
+        ArgumentsScroll = ArgumentsScroll,
+        ArgumentsText = ArgumentsText,
+        CodeBox = CodeBox,
+        ActionsScroller = ScrollingFrame,
+        ActionsGrid = UIGridLayout,
+        StatusBar = StatusBar,
+        StatusDot = StatusDot,
+        StatusStateText = StatusStateText,
+        StatusCallsText = StatusCallsText,
+        StatusRemotesText = StatusRemotesText,
+        ToolTip = ToolTip,
+        TooltipText = TextLabel,
+    }
+end
+
+local UI = createQuantumUI()
 
 -------------------------------------------------------------------------------
 
@@ -476,16 +519,16 @@ local running_threads = {}
 local originalnamecall
 
 local function resetQuantumInspector()
-    InspectorSelection.Text = "no remote selected"
-    InspectorSelection.TextColor3 = Quantum.TextMuted
-    RemoteNameValue.Text = "—"
-    RemoteTypeValue.Text = "—"
-    RemoteMethodValue.Text = "—"
-    RemoteCallsValue.Text = "0"
-    RemotePathValue.Text = "—"
-    ArgumentsText.Text = "no arguments"
-    ArgumentsText.TextColor3 = Quantum.TextMuted
-    ArgumentsScroll.CanvasPosition = Vector2.zero
+    UI.InspectorSelection.Text = "no remote selected"
+    UI.InspectorSelection.TextColor3 = Quantum.TextMuted
+    UI.RemoteNameValue.Text = "—"
+    UI.RemoteTypeValue.Text = "—"
+    UI.RemoteMethodValue.Text = "—"
+    UI.RemoteCallsValue.Text = "0"
+    UI.RemotePathValue.Text = "—"
+    UI.ArgumentsText.Text = "no arguments"
+    UI.ArgumentsText.TextColor3 = Quantum.TextMuted
+    UI.ArgumentsScroll.CanvasPosition = Vector2.zero
     if codebox then
         codebox:setRaw("-- select a remote to inspect generated code")
     end
@@ -510,25 +553,25 @@ local function updateQuantumStatus()
     local active = toggle
     local state = active and "active" or "paused"
     local stateColor = active and Quantum.Cyan or Quantum.Warning
-    StatusStateText.Text = "spy:" .. state
-    StatusCallsText.Text = string.format("calls:%d", #logs)
-    StatusRemotesText.Text = string.format("remotes:%d", getLiveRemoteCount())
-    StatusDot.BackgroundColor3 = stateColor
-    SpyStatusDot.BackgroundColor3 = stateColor
-    SpyStatusText.Text = active and "ACTIVE" or "PAUSED"
-    SpyStatusText.TextColor3 = active and Quantum.TextSecondary or Quantum.Warning
-    RemoteCountLabel.Text = string.format("%d calls", #logs)
+    UI.StatusStateText.Text = "spy:" .. state
+    UI.StatusCallsText.Text = string.format("calls:%d", #logs)
+    UI.StatusRemotesText.Text = string.format("remotes:%d", getLiveRemoteCount())
+    UI.StatusDot.BackgroundColor3 = stateColor
+    UI.SpyStatusDot.BackgroundColor3 = stateColor
+    UI.SpyStatusText.Text = active and "ACTIVE" or "PAUSED"
+    UI.SpyStatusText.TextColor3 = active and Quantum.TextSecondary or Quantum.Warning
+    UI.RemoteCountLabel.Text = string.format("%d calls", #logs)
 end
 
 local function applyRemoteFilter()
-    local query = lower(FilterInput.Text)
+    local query = lower(UI.FilterInput.Text)
     for _, log in next, logs do
         local remotePath = log.RemotePath or ""
         if log.Log and log.Log.Parent then
             log.Log.Visible = query == "" or lower(log.Name):find(query, 1, true) ~= nil or lower(remotePath):find(query, 1, true) ~= nil
         end
     end
-    LogList.CanvasSize = UDim2.fromOffset(UIListLayout.AbsoluteContentSize.X, UIListLayout.AbsoluteContentSize.Y + 6)
+    UI.LogList.CanvasSize = UDim2.fromOffset(UI.RemoteListLayout.AbsoluteContentSize.X, UI.RemoteListLayout.AbsoluteContentSize.Y + 6)
 end
 
 local function styleRemoteRow(log, isSelected)
@@ -544,14 +587,14 @@ local function styleRemoteRow(log, isSelected)
     end
 end
 
-FilterInput:GetPropertyChangedSignal("Text"):Connect(applyRemoteFilter)
+UI.FilterInput:GetPropertyChangedSignal("Text"):Connect(applyRemoteFilter)
 
-local remoteEvent = Instance.new("RemoteEvent",Storage)
+local remoteEvent = Instance.new("RemoteEvent",UI.Storage)
 local unreliableRemoteEvent = Instance.new("UnreliableRemoteEvent")
-local remoteFunction = Instance.new("RemoteFunction",Storage)
-local NamecallHandler = Instance.new("BindableEvent",Storage)
-local IndexHandler = Instance.new("BindableEvent",Storage)
-local GetDebugIdHandler = Instance.new("BindableFunction",Storage) --Thanks engo for the idea of using BindableFunctions
+local remoteFunction = Instance.new("RemoteFunction",UI.Storage)
+local NamecallHandler = Instance.new("BindableEvent",UI.Storage)
+local IndexHandler = Instance.new("BindableEvent",UI.Storage)
+local GetDebugIdHandler = Instance.new("BindableFunction",UI.Storage) --Thanks engo for the idea of using BindableFunctions
 
 local originalEvent = remoteEvent.FireServer
 local originalUnreliableEvent = unreliableRemoteEvent.FireServer
@@ -658,36 +701,36 @@ end
 
 --- Scales the ToolTip to fit containing text
 function scaleToolTip()
-    local size = TextService:GetTextSize(TextLabel.Text, TextLabel.TextSize, TextLabel.Font, Vector2.new(196, math.huge))
-    TextLabel.Size = UDim2.new(0, size.X, 0, size.Y)
-    ToolTip.Size = UDim2.new(0, size.X + 14, 0, size.Y + 10)
+    local size = TextService:GetTextSize(UI.TooltipText.Text, UI.TooltipText.TextSize, UI.TooltipText.Font, Vector2.new(196, math.huge))
+    UI.TooltipText.Size = UDim2.new(0, size.X, 0, size.Y)
+    UI.ToolTip.Size = UDim2.new(0, size.X + 14, 0, size.Y + 10)
 end
 
 --- Executed when the toggle button (the SimpleSpy logo) is hovered over
 function onToggleButtonHover()
-    quantumTween(Simple, {TextColor3 = toggle and Quantum.Success or Quantum.Warning}, 0.12)
+    quantumTween(UI.ToggleButton, {TextColor3 = toggle and Quantum.Success or Quantum.Warning}, 0.12)
 end
 
 --- Executed when the toggle button is unhovered over
 function onToggleButtonUnhover()
-    quantumTween(Simple, {TextColor3 = Quantum.Text}, 0.12)
+    quantumTween(UI.ToggleButton, {TextColor3 = Quantum.Text}, 0.12)
 end
 
 --- Executed when the X button is hovered over
 function onXButtonHover()
-    quantumTween(CloseButton, {BackgroundColor3 = Quantum.Error, TextColor3 = Quantum.Text}, 0.12)
+    quantumTween(UI.CloseButton, {BackgroundColor3 = Quantum.Error, TextColor3 = Quantum.Text}, 0.12)
 end
 
 --- Executed when the X button is unhovered over
 function onXButtonUnhover()
-    quantumTween(CloseButton, {BackgroundColor3 = Quantum.Panel, TextColor3 = Quantum.TextSecondary}, 0.1)
+    quantumTween(UI.CloseButton, {BackgroundColor3 = Quantum.Panel, TextColor3 = Quantum.TextSecondary}, 0.1)
 end
 
 --- Toggles the remote spy method (when button clicked)
 function onToggleButtonClick()
     toggleSpyMethod()
     updateQuantumStatus()
-    quantumTween(Simple, {TextColor3 = toggle and Quantum.Success or Quantum.Warning}, 0.12)
+    quantumTween(UI.ToggleButton, {TextColor3 = toggle and Quantum.Success or Quantum.Warning}, 0.12)
 end
 
 --- Reconnects bringBackOnResize if the current viewport changes and also connects it initially
@@ -713,24 +756,24 @@ function bringBackOnResize()
     else
         maximizeSize()
     end
-    local currentX = Background.AbsolutePosition.X
-    local currentY = Background.AbsolutePosition.Y
+    local currentX = UI.Background.AbsolutePosition.X
+    local currentY = UI.Background.AbsolutePosition.Y
     local viewportSize = workspace.CurrentCamera.ViewportSize
-    if (currentX < 0) or (currentX > (viewportSize.X - Background.AbsoluteSize.X)) then
+    if (currentX < 0) or (currentX > (viewportSize.X - UI.Background.AbsoluteSize.X)) then
         if currentX < 0 then
             currentX = 0
         else
-            currentX = viewportSize.X - Background.AbsoluteSize.X
+            currentX = viewportSize.X - UI.Background.AbsoluteSize.X
         end
     end
-    if (currentY < 0) or (currentY > (viewportSize.Y - (closed and HEADER_HEIGHT or Background.AbsoluteSize.Y) - GuiInset.Y)) then
+    if (currentY < 0) or (currentY > (viewportSize.Y - (closed and HEADER_HEIGHT or UI.Background.AbsoluteSize.Y) - GuiInset.Y)) then
         if currentY < 0 then
             currentY = 0
         else
-            currentY = viewportSize.Y - (closed and HEADER_HEIGHT or Background.AbsoluteSize.Y) - GuiInset.Y
+            currentY = viewportSize.Y - (closed and HEADER_HEIGHT or UI.Background.AbsoluteSize.Y) - GuiInset.Y
         end
     end
-    TweenService.Create(TweenService, Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentX, 0, currentY)}):Play()
+    TweenService.Create(TweenService, UI.Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentX, 0, currentY)}):Play()
 end
 
 --- Drags gui (so long as mouse is held down)
@@ -738,7 +781,7 @@ end
 function onBarInput(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         local lastPos = UserInputService:GetMouseLocation()
-        local mainPos = Background.AbsolutePosition
+        local mainPos = UI.Background.AbsolutePosition
         local offset = mainPos - lastPos
         local currentPos = offset + lastPos
         if not connections["drag"] then
@@ -748,23 +791,23 @@ function onBarInput(input)
                     local currentX = (offset + newPos).X
                     local currentY = (offset + newPos).Y
                     local viewportSize = workspace.CurrentCamera.ViewportSize
-                    if (currentX < 0 and currentX < currentPos.X) or (currentX > (viewportSize.X - TopBar.AbsoluteSize.X) and currentX > currentPos.X) then
+                    if (currentX < 0 and currentX < currentPos.X) or (currentX > (viewportSize.X - UI.TopBar.AbsoluteSize.X) and currentX > currentPos.X) then
                         if currentX < 0 then
                             currentX = 0
                         else
-                            currentX = viewportSize.X - TopBar.AbsoluteSize.X
+                            currentX = viewportSize.X - UI.TopBar.AbsoluteSize.X
                         end
                     end
-                    if (currentY < 0 and currentY < currentPos.Y) or (currentY > (viewportSize.Y - (closed and HEADER_HEIGHT or Background.AbsoluteSize.Y) - GuiInset.Y) and currentY > currentPos.Y) then
+                    if (currentY < 0 and currentY < currentPos.Y) or (currentY > (viewportSize.Y - (closed and HEADER_HEIGHT or UI.Background.AbsoluteSize.Y) - GuiInset.Y) and currentY > currentPos.Y) then
                         if currentY < 0 then
                             currentY = 0
                         else
-                            currentY = viewportSize.Y - (closed and HEADER_HEIGHT or Background.AbsoluteSize.Y) - GuiInset.Y
+                            currentY = viewportSize.Y - (closed and HEADER_HEIGHT or UI.Background.AbsoluteSize.Y) - GuiInset.Y
                         end
                     end
                     currentPos = Vector2.new(currentX, currentY)
                     lastPos = newPos
-                    TweenService.Create(TweenService, Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentPos.X, 0, currentPos.Y)}):Play()
+                    TweenService.Create(TweenService, UI.Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentPos.X, 0, currentPos.Y)}):Play()
                 end
                     -- if input.UserInputState ~= Enum.UserInputState.Begin then
                     --     RunService.UnbindFromRenderStep(RunService, "drag")
@@ -790,28 +833,28 @@ function toggleMinimize(override)
     mainClosing = true
     closed = not closed
     if closed then
-        expandedWindowHeight = math.max(Background.AbsoluteSize.Y, MINIMUM_HEIGHT)
-        BackgroundConstraint.MinSize = Vector2.new(MINIMUM_WIDTH, HEADER_HEIGHT)
-        quantumTween(LeftPanel, {GroupTransparency = 1}, 0.14)
-        quantumTween(RightPanel, {GroupTransparency = 1}, 0.14)
-        quantumTween(StatusBar, {GroupTransparency = 1}, 0.14)
-        quantumTween(Background, {Size = UDim2.fromOffset(Background.AbsoluteSize.X, HEADER_HEIGHT)}, 0.18, Enum.EasingStyle.Quint)
-        MinimizeButton.Text = "▢"
+        expandedWindowHeight = math.max(UI.Background.AbsoluteSize.Y, MINIMUM_HEIGHT)
+        UI.BackgroundConstraint.MinSize = Vector2.new(MINIMUM_WIDTH, HEADER_HEIGHT)
+        quantumTween(UI.LeftPanel, {GroupTransparency = 1}, 0.14)
+        quantumTween(UI.RightPanel, {GroupTransparency = 1}, 0.14)
+        quantumTween(UI.StatusBar, {GroupTransparency = 1}, 0.14)
+        quantumTween(UI.Background, {Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X, HEADER_HEIGHT)}, 0.18, Enum.EasingStyle.Quint)
+        UI.MinimizeButton.Text = "▢"
         wait(0.18)
-        LeftPanel.Visible = false
-        RightPanel.Visible = false
-        StatusBar.Visible = false
+        UI.LeftPanel.Visible = false
+        UI.RightPanel.Visible = false
+        UI.StatusBar.Visible = false
     else
-        LeftPanel.Visible = true
-        RightPanel.Visible = not sideClosed
-        StatusBar.Visible = true
-        quantumTween(Background, {Size = UDim2.fromOffset(Background.AbsoluteSize.X, expandedWindowHeight)}, 0.18, Enum.EasingStyle.Quint)
+        UI.LeftPanel.Visible = true
+        UI.RightPanel.Visible = not sideClosed
+        UI.StatusBar.Visible = true
+        quantumTween(UI.Background, {Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X, expandedWindowHeight)}, 0.18, Enum.EasingStyle.Quint)
         wait(0.12)
-        quantumTween(LeftPanel, {GroupTransparency = 0}, 0.14)
-        quantumTween(RightPanel, {GroupTransparency = sideClosed and 1 or 0}, 0.14)
-        quantumTween(StatusBar, {GroupTransparency = 0}, 0.14)
-        BackgroundConstraint.MinSize = Vector2.new(MINIMUM_WIDTH, MINIMUM_HEIGHT)
-        MinimizeButton.Text = "–"
+        quantumTween(UI.LeftPanel, {GroupTransparency = 0}, 0.14)
+        quantumTween(UI.RightPanel, {GroupTransparency = sideClosed and 1 or 0}, 0.14)
+        quantumTween(UI.StatusBar, {GroupTransparency = 0}, 0.14)
+        UI.BackgroundConstraint.MinSize = Vector2.new(MINIMUM_WIDTH, MINIMUM_HEIGHT)
+        UI.MinimizeButton.Text = "–"
         bringBackOnResize()
     end
     mainClosing = false
@@ -828,15 +871,15 @@ function toggleSideTray(override)
     end
     sideClosed = not sideClosed
     if sideClosed then
-        quantumTween(RightPanel, {GroupTransparency = 1}, 0.14)
+        quantumTween(UI.RightPanel, {GroupTransparency = 1}, 0.14)
         wait(0.14)
-        RightPanel.Visible = false
+        UI.RightPanel.Visible = false
         minimizeSize(0.18)
     else
-        RightPanel.Visible = true
-        RightPanel.GroupTransparency = 1
+        UI.RightPanel.Visible = true
+        UI.RightPanel.GroupTransparency = 1
         maximizeSize(0.18)
-        quantumTween(RightPanel, {GroupTransparency = 0}, 0.16)
+        quantumTween(UI.RightPanel, {GroupTransparency = 0}, 0.16)
         bringBackOnResize()
     end
     sideClosing = false
@@ -847,8 +890,8 @@ function toggleMaximize()
     if not sideClosed and not maximized then
         maximized = true
         local disable = Instance.new("TextButton")
-        local prevSize = UDim2.new(0, CodeBox.AbsoluteSize.X, 0, CodeBox.AbsoluteSize.Y)
-        local prevPos = UDim2.new(0,CodeBox.AbsolutePosition.X, 0, CodeBox.AbsolutePosition.Y)
+        local prevSize = UDim2.new(0, UI.CodeBox.AbsoluteSize.X, 0, UI.CodeBox.AbsoluteSize.Y)
+        local prevPos = UDim2.new(0,UI.CodeBox.AbsolutePosition.X, 0, UI.CodeBox.AbsolutePosition.Y)
         disable.Size = UDim2.new(1, 0, 1, 0)
         disable.BackgroundColor3 = Color3.new()
         disable.BorderSizePixel = 0
@@ -856,22 +899,22 @@ function toggleMaximize()
         disable.ZIndex = 3
         disable.BackgroundTransparency = 1
         disable.AutoButtonColor = false
-        CodeBox.ZIndex = 4
-        CodeBox.Position = prevPos
-        CodeBox.Size = prevSize
-        TweenService:Create(CodeBox, TweenInfo.new(0.5), {Size = UDim2.new(0.5, 0, 0.5, 0), Position = UDim2.new(0.25, 0, 0.25, 0)}):Play()
+        UI.CodeBox.ZIndex = 4
+        UI.CodeBox.Position = prevPos
+        UI.CodeBox.Size = prevSize
+        TweenService:Create(UI.CodeBox, TweenInfo.new(0.5), {Size = UDim2.new(0.5, 0, 0.5, 0), Position = UDim2.new(0.25, 0, 0.25, 0)}):Play()
         TweenService:Create(disable, TweenInfo.new(0.5), {BackgroundTransparency = 0.5}):Play()
         disable.MouseButton1Click:Connect(function()
-            if UserInputService:GetMouseLocation().Y + GuiInset.Y >= CodeBox.AbsolutePosition.Y and UserInputService:GetMouseLocation().Y + GuiInset.Y <= CodeBox.AbsolutePosition.Y + CodeBox.AbsoluteSize.Y and UserInputService:GetMouseLocation().X >= CodeBox.AbsolutePosition.X and UserInputService:GetMouseLocation().X <= CodeBox.AbsolutePosition.X + CodeBox.AbsoluteSize.X then
+            if UserInputService:GetMouseLocation().Y + GuiInset.Y >= UI.CodeBox.AbsolutePosition.Y and UserInputService:GetMouseLocation().Y + GuiInset.Y <= UI.CodeBox.AbsolutePosition.Y + UI.CodeBox.AbsoluteSize.Y and UserInputService:GetMouseLocation().X >= UI.CodeBox.AbsolutePosition.X and UserInputService:GetMouseLocation().X <= UI.CodeBox.AbsolutePosition.X + UI.CodeBox.AbsoluteSize.X then
                 return
             end
-            TweenService:Create(CodeBox, TweenInfo.new(0.5), {Size = prevSize, Position = prevPos}):Play()
+            TweenService:Create(UI.CodeBox, TweenInfo.new(0.5), {Size = prevSize, Position = prevPos}):Play()
             TweenService:Create(disable, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
             wait(0.5)
             disable:Destroy()
-            CodeBox.Size = UDim2.new(1, 0, 0.5, 0)
-            CodeBox.Position = UDim2.new(0, 0, 0, 0)
-            CodeBox.ZIndex = 0
+            UI.CodeBox.Size = UDim2.new(1, 0, 0.5, 0)
+            UI.CodeBox.Position = UDim2.new(0, 0, 0, 0)
+            UI.CodeBox.ZIndex = 0
             maximized = false
         end)
     end
@@ -880,8 +923,8 @@ end
 --- Checks if cursor is within resize range
 --- @param p Vector2
 function isInResizeRange(p)
-    local relativeP = p - Background.AbsolutePosition
-    local backgroundSize = Background.AbsoluteSize
+    local relativeP = p - UI.Background.AbsolutePosition
+    local backgroundSize = UI.Background.AbsoluteSize
     local range = 5
     if relativeP.X >= backgroundSize.X - range and relativeP.Y >= backgroundSize.Y - range
         and relativeP.X <= backgroundSize.X and relativeP.Y <= backgroundSize.Y then
@@ -897,13 +940,13 @@ end
 --- Checks if cursor is within dragging range
 --- @param p Vector2
 function isInDragRange(p)
-    local topLeft = TopBar.AbsolutePosition
-    local bottomRight = topLeft + TopBar.AbsoluteSize
-    return p.X >= topLeft.X and p.X <= bottomRight.X - CloseButton.AbsoluteSize.X * 3 and p.Y >= topLeft.Y and p.Y <= bottomRight.Y
+    local topLeft = UI.TopBar.AbsolutePosition
+    local bottomRight = topLeft + UI.TopBar.AbsoluteSize
+    return p.X >= topLeft.X and p.X <= bottomRight.X - UI.CloseButton.AbsoluteSize.X * 3 and p.Y >= topLeft.Y and p.Y <= bottomRight.Y
 end
 
 --- Called when mouse enters SimpleSpy
-local customCursor = Create("ImageLabel",{Parent = SimpleSpy3,Visible = false,Size = UDim2.fromOffset(200, 200),ZIndex = 1e9,BackgroundTransparency = 1,Image = "",Parent = SimpleSpy3})
+local customCursor = Create("ImageLabel",{Parent = UI.SimpleSpy3,Visible = false,Size = UDim2.fromOffset(200, 200),ZIndex = 1e9,BackgroundTransparency = 1,Image = "",Parent = UI.SimpleSpy3})
 function mouseEntered()
     local con = connections["SIMPLESPY_CURSOR"]
     if con then
@@ -936,8 +979,8 @@ end
 function mouseMoved()
     local mousePos = UserInputService:GetMouseLocation() - GuiInset
     if not closed
-    and mousePos.X >= TopBar.AbsolutePosition.X and mousePos.X <= TopBar.AbsolutePosition.X + TopBar.AbsoluteSize.X
-    and mousePos.Y >= Background.AbsolutePosition.Y and mousePos.Y <= Background.AbsolutePosition.Y + Background.AbsoluteSize.Y then
+    and mousePos.X >= UI.TopBar.AbsolutePosition.X and mousePos.X <= UI.TopBar.AbsolutePosition.X + UI.TopBar.AbsoluteSize.X
+    and mousePos.Y >= UI.Background.AbsolutePosition.Y and mousePos.Y <= UI.Background.AbsolutePosition.Y + UI.Background.AbsoluteSize.Y then
         if not mouseInGui then
             mouseInGui = true
             mouseEntered()
@@ -950,56 +993,56 @@ end
 --- Adjusts the ui elements to the 'Maximized' size
 function maximizeSize(speed)
     speed = speed or 0.08
-    local contentHeight = Background.AbsoluteSize.Y - HEADER_HEIGHT - STATUS_HEIGHT
-    quantumTween(LeftPanel, {Position = UDim2.fromOffset(0, HEADER_HEIGHT), Size = UDim2.fromOffset(SIDEBAR_WIDTH, contentHeight)}, speed)
-    quantumTween(RightPanel, {Position = UDim2.fromOffset(SIDEBAR_WIDTH, HEADER_HEIGHT), Size = UDim2.fromOffset(Background.AbsoluteSize.X - SIDEBAR_WIDTH, contentHeight)}, speed)
-    quantumTween(TopBar, {Position = UDim2.fromOffset(9, 9), Size = UDim2.fromOffset(Background.AbsoluteSize.X - 18, HEADER_HEIGHT - 20)}, speed)
-    quantumTween(StatusBar, {Position = UDim2.fromOffset(9, Background.AbsoluteSize.Y - STATUS_HEIGHT + 4), Size = UDim2.fromOffset(Background.AbsoluteSize.X - 18, STATUS_HEIGHT - 8)}, speed)
+    local contentHeight = UI.Background.AbsoluteSize.Y - HEADER_HEIGHT - STATUS_HEIGHT
+    quantumTween(UI.LeftPanel, {Position = UDim2.fromOffset(0, HEADER_HEIGHT), Size = UDim2.fromOffset(SIDEBAR_WIDTH, contentHeight)}, speed)
+    quantumTween(UI.RightPanel, {Position = UDim2.fromOffset(SIDEBAR_WIDTH, HEADER_HEIGHT), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X - SIDEBAR_WIDTH, contentHeight)}, speed)
+    quantumTween(UI.TopBar, {Position = UDim2.fromOffset(9, 9), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X - 18, HEADER_HEIGHT - 20)}, speed)
+    quantumTween(UI.StatusBar, {Position = UDim2.fromOffset(9, UI.Background.AbsoluteSize.Y - STATUS_HEIGHT + 4), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X - 18, STATUS_HEIGHT - 8)}, speed)
 end
 
 --- Adjusts the ui elements to close the side
 function minimizeSize(speed)
     speed = speed or 0.08
-    local contentHeight = Background.AbsoluteSize.Y - HEADER_HEIGHT - STATUS_HEIGHT
-    quantumTween(LeftPanel, {Position = UDim2.fromOffset(0, HEADER_HEIGHT), Size = UDim2.fromOffset(Background.AbsoluteSize.X, contentHeight)}, speed)
-    quantumTween(RightPanel, {Position = UDim2.fromOffset(Background.AbsoluteSize.X, HEADER_HEIGHT), Size = UDim2.fromOffset(0, contentHeight)}, speed)
-    quantumTween(TopBar, {Position = UDim2.fromOffset(9, 9), Size = UDim2.fromOffset(Background.AbsoluteSize.X - 18, HEADER_HEIGHT - 20)}, speed)
-    quantumTween(StatusBar, {Position = UDim2.fromOffset(9, Background.AbsoluteSize.Y - STATUS_HEIGHT + 4), Size = UDim2.fromOffset(Background.AbsoluteSize.X - 18, STATUS_HEIGHT - 8)}, speed)
+    local contentHeight = UI.Background.AbsoluteSize.Y - HEADER_HEIGHT - STATUS_HEIGHT
+    quantumTween(UI.LeftPanel, {Position = UDim2.fromOffset(0, HEADER_HEIGHT), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X, contentHeight)}, speed)
+    quantumTween(UI.RightPanel, {Position = UDim2.fromOffset(UI.Background.AbsoluteSize.X, HEADER_HEIGHT), Size = UDim2.fromOffset(0, contentHeight)}, speed)
+    quantumTween(UI.TopBar, {Position = UDim2.fromOffset(9, 9), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X - 18, HEADER_HEIGHT - 20)}, speed)
+    quantumTween(UI.StatusBar, {Position = UDim2.fromOffset(9, UI.Background.AbsoluteSize.Y - STATUS_HEIGHT + 4), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X - 18, STATUS_HEIGHT - 8)}, speed)
 end
 
 --- Ensures size is within screensize limitations
 function validateSize()
-    local x, y = Background.AbsoluteSize.X, Background.AbsoluteSize.Y
+    local x, y = UI.Background.AbsoluteSize.X, UI.Background.AbsoluteSize.Y
     local screenSize = workspace.CurrentCamera.ViewportSize
-    if x + Background.AbsolutePosition.X > screenSize.X then
-        if screenSize.X - Background.AbsolutePosition.X >= MINIMUM_WIDTH then
-            x = screenSize.X - Background.AbsolutePosition.X
+    if x + UI.Background.AbsolutePosition.X > screenSize.X then
+        if screenSize.X - UI.Background.AbsolutePosition.X >= MINIMUM_WIDTH then
+            x = screenSize.X - UI.Background.AbsolutePosition.X
         else
             x = MINIMUM_WIDTH
         end
     end
-    if y + Background.AbsolutePosition.Y > screenSize.Y then
-        if screenSize.Y - Background.AbsolutePosition.Y >= MINIMUM_HEIGHT then
-            y = screenSize.Y - Background.AbsolutePosition.Y
+    if y + UI.Background.AbsolutePosition.Y > screenSize.Y then
+        if screenSize.Y - UI.Background.AbsolutePosition.Y >= MINIMUM_HEIGHT then
+            y = screenSize.Y - UI.Background.AbsolutePosition.Y
         else
             y = MINIMUM_HEIGHT
         end
     end
-    Background.Size = UDim2.fromOffset(x, y)
+    UI.Background.Size = UDim2.fromOffset(x, y)
 end
 
 --- Called on user input while mouse in 'Background' frame
 --- @param input InputObject
 function backgroundUserInput(input)
     if input.KeyCode == Enum.KeyCode.F and (UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)) then
-        FilterInput:CaptureFocus()
+        UI.FilterInput:CaptureFocus()
         return
     end
     local mousePos = UserInputService:GetMouseLocation() - GuiInset
     local inResizeRange, type = isInResizeRange(mousePos)
     if input.UserInputType == Enum.UserInputType.MouseButton1 and inResizeRange then
         local lastPos = UserInputService:GetMouseLocation()
-        local offset = Background.AbsoluteSize - lastPos
+        local offset = UI.Background.AbsoluteSize - lastPos
         local currentPos = lastPos + offset
         if not connections["SIMPLESPY_RESIZE"] then
             connections["SIMPLESPY_RESIZE"] = RunService.RenderStepped:Connect(function()
@@ -1014,7 +1057,7 @@ function backgroundUserInput(input)
                         currentY = MINIMUM_HEIGHT
                     end
                     currentPos = Vector2.new(currentX, currentY)
-                    Background.Size = UDim2.fromOffset((not sideClosed and not closed and (type == "X" or type == "B")) and currentPos.X or Background.AbsoluteSize.X, (--[[(not sideClosed or currentPos.X <= LeftPanel.AbsolutePosition.X + LeftPanel.AbsoluteSize.X) and]] not closed and (type == "Y" or type == "B")) and currentPos.Y or Background.AbsoluteSize.Y)
+                    UI.Background.Size = UDim2.fromOffset((not sideClosed and not closed and (type == "X" or type == "B")) and currentPos.X or UI.Background.AbsoluteSize.X, (--[[(not sideClosed or currentPos.X <= UI.LeftPanel.AbsolutePosition.X + UI.LeftPanel.AbsoluteSize.X) and]] not closed and (type == "Y" or type == "B")) and currentPos.Y or UI.Background.AbsoluteSize.Y)
                     validateSize()
                     if sideClosed then
                         minimizeSize()
@@ -1130,19 +1173,19 @@ function eventSelect(frame)
     end
     if selected and selected.Log then
         styleRemoteRow(selected, true)
-        InspectorSelection.Text = string.format("%s / %s", selected.Name, selected.Method or "remote")
-        InspectorSelection.TextColor3 = Quantum.TextSecondary
-        RemoteNameValue.Text = selected.Name
-        RemoteTypeValue.Text = selected.Remote.ClassName
-        RemoteMethodValue.Text = selected.Method or "—"
-        RemoteCallsValue.Text = tostring(getRemoteCallCount(selected))
-        RemotePathValue.Text = selected.RemotePath or "—"
-        ArgumentsScroll.CanvasPosition = Vector2.zero
-        ArgumentsText.Text = formatArgumentPreview(selected.args)
-        ArgumentsText.TextColor3 = Quantum.TextSecondary
-        quantumTween(CodeBox, {BackgroundColor3 = Quantum.Surface}, 0.07)
+        UI.InspectorSelection.Text = string.format("%s / %s", selected.Name, selected.Method or "remote")
+        UI.InspectorSelection.TextColor3 = Quantum.TextSecondary
+        UI.RemoteNameValue.Text = selected.Name
+        UI.RemoteTypeValue.Text = selected.Remote.ClassName
+        UI.RemoteMethodValue.Text = selected.Method or "—"
+        UI.RemoteCallsValue.Text = tostring(getRemoteCallCount(selected))
+        UI.RemotePathValue.Text = selected.RemotePath or "—"
+        UI.ArgumentsScroll.CanvasPosition = Vector2.zero
+        UI.ArgumentsText.Text = formatArgumentPreview(selected.args)
+        UI.ArgumentsText.TextColor3 = Quantum.TextSecondary
+        quantumTween(UI.CodeBox, {BackgroundColor3 = Quantum.Surface}, 0.07)
         codebox:setRaw(selected.GenScript)
-        quantumTween(CodeBox, {BackgroundColor3 = Quantum.Editor}, 0.12)
+        quantumTween(UI.CodeBox, {BackgroundColor3 = Quantum.Editor}, 0.12)
     else
         resetQuantumInspector()
     end
@@ -1154,24 +1197,24 @@ end
 
 --- Updates the canvas size to fit the current amount of function buttons
 function updateFunctionCanvas()
-    ScrollingFrame.CanvasSize = UDim2.fromOffset(UIGridLayout.AbsoluteContentSize.X + 12, UIGridLayout.AbsoluteContentSize.Y + 12)
+    UI.ActionsScroller.CanvasSize = UDim2.fromOffset(UI.ActionsGrid.AbsoluteContentSize.X + 12, UI.ActionsGrid.AbsoluteContentSize.Y + 12)
 end
 
 --- Updates the canvas size to fit the amount of current remotes
 function updateRemoteCanvas()
-    LogList.CanvasSize = UDim2.fromOffset(UIListLayout.AbsoluteContentSize.X, UIListLayout.AbsoluteContentSize.Y + 6)
+    UI.LogList.CanvasSize = UDim2.fromOffset(UI.RemoteListLayout.AbsoluteContentSize.X, UI.RemoteListLayout.AbsoluteContentSize.Y + 6)
 end
 
-table.insert(connections, UIGridLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateFunctionCanvas))
-table.insert(connections, UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateRemoteCanvas))
+table.insert(connections, UI.ActionsGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateFunctionCanvas))
+table.insert(connections, UI.RemoteListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateRemoteCanvas))
 
 --- Allows for toggling of the tooltip and easy setting of le description
 --- @param enable boolean
 --- @param text string
 function makeToolTip(enable, text)
     if enable and text then
-        if ToolTip.Visible then
-            ToolTip.Visible = false
+        if UI.ToolTip.Visible then
+            UI.ToolTip.Visible = false
             local tooltip = connections["ToolTip"]
             if tooltip then
                 tooltip:Disconnect()
@@ -1181,7 +1224,7 @@ function makeToolTip(enable, text)
         connections["ToolTip"] = RunService.RenderStepped:Connect(function()
             local MousePos = UserInputService:GetMouseLocation()
             local topLeft = MousePos + Vector2.new(20, -15)
-            local bottomRight = topLeft + ToolTip.AbsoluteSize
+            local bottomRight = topLeft + UI.ToolTip.AbsoluteSize
             local ViewportSize = workspace.CurrentCamera.ViewportSize
             local ViewportSizeX = ViewportSize.X
             local ViewportSizeY = ViewportSize.Y
@@ -1189,30 +1232,30 @@ function makeToolTip(enable, text)
             if topLeft.X < 0 then
                 topLeft = Vector2.new(0, topLeft.Y)
             elseif bottomRight.X > ViewportSizeX then
-                topLeft = Vector2.new(ViewportSizeX - ToolTip.AbsoluteSize.X, topLeft.Y)
+                topLeft = Vector2.new(ViewportSizeX - UI.ToolTip.AbsoluteSize.X, topLeft.Y)
             end
             if topLeft.Y < 0 then
                 topLeft = Vector2.new(topLeft.X, 0)
             elseif bottomRight.Y > ViewportSizeY - 35 then
-                topLeft = Vector2.new(topLeft.X, ViewportSizeY - ToolTip.AbsoluteSize.Y - 35)
+                topLeft = Vector2.new(topLeft.X, ViewportSizeY - UI.ToolTip.AbsoluteSize.Y - 35)
             end
             if topLeft.X <= MousePos.X and topLeft.Y <= MousePos.Y then
-                topLeft = Vector2.new(MousePos.X - ToolTip.AbsoluteSize.X - 2, MousePos.Y - ToolTip.AbsoluteSize.Y - 2)
+                topLeft = Vector2.new(MousePos.X - UI.ToolTip.AbsoluteSize.X - 2, MousePos.Y - UI.ToolTip.AbsoluteSize.Y - 2)
             end
             if first then
-                ToolTip.Position = UDim2.fromOffset(topLeft.X, topLeft.Y)
+                UI.ToolTip.Position = UDim2.fromOffset(topLeft.X, topLeft.Y)
                 first = false
             else
-                ToolTip:TweenPosition(UDim2.fromOffset(topLeft.X, topLeft.Y), "Out", "Linear", 0.1)
+                UI.ToolTip:TweenPosition(UDim2.fromOffset(topLeft.X, topLeft.Y), "Out", "Linear", 0.1)
             end
         end)
-        TextLabel.Text = text
-        TextLabel.TextScaled = true
-        ToolTip.Visible = true
+        UI.TooltipText.Text = text
+        UI.TooltipText.TextScaled = true
+        UI.ToolTip.Visible = true
         return
     else
-        if ToolTip.Visible then
-            ToolTip.Visible = false
+        if UI.ToolTip.Visible then
+            UI.ToolTip.Visible = false
             local tooltip = connections["ToolTip"]
             if tooltip then
                 tooltip:Disconnect()
@@ -1227,7 +1270,7 @@ end
 ---@param onClick function
 function newButton(name, description, onClick)
     local isPrimary = name == "Run Code"
-    local FunctionTemplate, Button, Text, ButtonStroke = createToolbarButton(ScrollingFrame, name, isPrimary)
+    local FunctionTemplate, Button, Text, ButtonStroke = createToolbarButton(UI.ActionsScroller, name, isPrimary)
 
     Button.MouseEnter:Connect(function()
         quantumTween(ButtonStroke, {Color = isPrimary and Quantum.Accent or Quantum.TextMuted}, 0.1)
@@ -1273,7 +1316,7 @@ function newRemote(type, data)
     local typeColor = type == "event" and Quantum.Accent or Quantum.Violet
     local methodLabel = type == "event" and "FireServer" or "InvokeServer"
 
-    local RemoteTemplate = Create("Frame",{LayoutOrder = layoutOrderNum,Name = "RemoteTemplate",Parent = LogList,BackgroundTransparency = 1,Size = UDim2.new(1, -2, 0, 40)})
+    local RemoteTemplate = Create("Frame",{LayoutOrder = layoutOrderNum,Name = "RemoteTemplate",Parent = UI.LogList,BackgroundTransparency = 1,Size = UDim2.new(1, -2, 0, 40)})
     local Button = Create("TextButton",{Name = "Button",Parent = RemoteTemplate,BackgroundColor3 = Quantum.InnerSurface,BackgroundTransparency = 1,BorderSizePixel = 0,Size = UDim2.fromScale(1, 1),AutoButtonColor = false,Text = ""})
     addCorner(Button, 2)
     local ButtonScale = Create("UIScale",{Parent = Button,Scale = 1})
@@ -2219,10 +2262,10 @@ end
 
 --- Shuts down the remote spy
 local function shutdown()
-    if SimpleSpy3.Parent then
-        quantumTween(Background, {GroupTransparency = 1}, 0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-        quantumTween(BackgroundScale, {Scale = 0.99}, 0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-        quantumTween(WindowShadow, {ImageTransparency = 1}, 0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+    if UI.SimpleSpy3.Parent then
+        quantumTween(UI.Background, {GroupTransparency = 1}, 0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+        quantumTween(UI.BackgroundScale, {Scale = 0.99}, 0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+        quantumTween(UI.WindowShadow, {ImageTransparency = 1}, 0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
         wait(0.14)
     end
     if schedulerconnect then
@@ -2241,8 +2284,8 @@ local function shutdown()
     clear(logs)
     clear(remoteLogs)
     disablehooks()
-    SimpleSpy3:Destroy()
-    Storage:Destroy()
+    UI.SimpleSpy3:Destroy()
+    UI.Storage:Destroy()
     UserInputService.MouseIconEnabled = true
     getgenv().SimpleSpyExecuted = false
 end
@@ -2258,7 +2301,7 @@ if not getgenv().SimpleSpyExecuted then
         if not hookmetamethod then
             ErrorPrompt("Simple Spy V3 will not function to it's fullest capablity due to your executor not supporting hookmetamethod.",true)
         end
-        codebox = Highlight.new(CodeBox)
+        codebox = Highlight.new(UI.CodeBox)
         codebox:setRaw("-- select a remote to inspect generated code")
         getgenv().SimpleSpy = SimpleSpy
         getgenv().getNil = function(name,class)
@@ -2268,38 +2311,38 @@ if not getgenv().SimpleSpyExecuted then
                 end
             end
         end
-        Background.MouseEnter:Connect(function(...)
+        UI.Background.MouseEnter:Connect(function(...)
             mouseInGui = true
             mouseEntered()
         end)
-        Background.MouseLeave:Connect(function(...)
+        UI.Background.MouseLeave:Connect(function(...)
             mouseInGui = false
             mouseEntered()
         end)
-        TextLabel:GetPropertyChangedSignal("Text"):Connect(scaleToolTip)
-        -- TopBar.InputBegan:Connect(onBarInput)
-        MinimizeButton.MouseButton1Click:Connect(toggleMinimize)
-        MaximizeButton.MouseButton1Click:Connect(toggleSideTray)
-        Simple.MouseButton1Click:Connect(onToggleButtonClick)
-        CloseButton.MouseEnter:Connect(onXButtonHover)
-        CloseButton.MouseLeave:Connect(onXButtonUnhover)
-        Simple.MouseEnter:Connect(onToggleButtonHover)
-        Simple.MouseLeave:Connect(onToggleButtonUnhover)
-        CloseButton.MouseButton1Click:Connect(shutdown)
+        UI.TooltipText:GetPropertyChangedSignal("Text"):Connect(scaleToolTip)
+        -- UI.TopBar.InputBegan:Connect(onBarInput)
+        UI.MinimizeButton.MouseButton1Click:Connect(toggleMinimize)
+        UI.MaximizeButton.MouseButton1Click:Connect(toggleSideTray)
+        UI.ToggleButton.MouseButton1Click:Connect(onToggleButtonClick)
+        UI.CloseButton.MouseEnter:Connect(onXButtonHover)
+        UI.CloseButton.MouseLeave:Connect(onXButtonUnhover)
+        UI.ToggleButton.MouseEnter:Connect(onToggleButtonHover)
+        UI.ToggleButton.MouseLeave:Connect(onToggleButtonUnhover)
+        UI.CloseButton.MouseButton1Click:Connect(shutdown)
         table.insert(connections, UserInputService.InputBegan:Connect(backgroundUserInput))
         connectResize()
-        SimpleSpy3.Enabled = true
+        UI.SimpleSpy3.Enabled = true
         logthread(spawn(function()
             delay(1,onToggleButtonUnhover)
         end))
         schedulerconnect = RunService.Heartbeat:Connect(taskscheduler)
         bringBackOnResize()
-        local settledPosition = Background.Position
-        Background.Position = UDim2.new(settledPosition.X.Scale, settledPosition.X.Offset, settledPosition.Y.Scale, settledPosition.Y.Offset + 4)
-        SimpleSpy3.Parent = (gethui and gethui()) or (syn and syn.protect_gui and syn.protect_gui(SimpleSpy3)) or CoreGui
-        quantumTween(Background, {GroupTransparency = 0, Position = settledPosition}, 0.2, Enum.EasingStyle.Quint)
-        quantumTween(BackgroundScale, {Scale = 1}, 0.2, Enum.EasingStyle.Quint)
-        quantumTween(WindowShadow, {ImageTransparency = 0.72}, 0.2, Enum.EasingStyle.Quint)
+        local settledPosition = UI.Background.Position
+        UI.Background.Position = UDim2.new(settledPosition.X.Scale, settledPosition.X.Offset, settledPosition.Y.Scale, settledPosition.Y.Offset + 4)
+        UI.SimpleSpy3.Parent = (gethui and gethui()) or (syn and syn.protect_gui and syn.protect_gui(UI.SimpleSpy3)) or CoreGui
+        quantumTween(UI.Background, {GroupTransparency = 0, Position = settledPosition}, 0.2, Enum.EasingStyle.Quint)
+        quantumTween(UI.BackgroundScale, {Scale = 1}, 0.2, Enum.EasingStyle.Quint)
+        quantumTween(UI.WindowShadow, {ImageTransparency = 0.72}, 0.2, Enum.EasingStyle.Quint)
         updateQuantumStatus()
         logthread(spawn(function()
             local lp = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait() or Players.LocalPlayer
@@ -2319,7 +2362,7 @@ if not getgenv().SimpleSpyExecuted then
         return
     end
 else
-    SimpleSpy3:Destroy()
+    UI.SimpleSpy3:Destroy()
     return
 end
 
@@ -2355,7 +2398,7 @@ newButton(
     function() return "Click to copy code" end,
     function()
         setclipboard(codebox:getString())
-        TextLabel.Text = "Copied successfully!"
+        UI.TooltipText.Text = "Copied successfully!"
     end
 )
 
@@ -2366,7 +2409,7 @@ newButton(
     function()
         if selected and selected.Remote then
             setclipboard(v2s(selected.Remote))
-            TextLabel.Text = "Copied!"
+            UI.TooltipText.Text = "Copied!"
         end
     end
 )
@@ -2377,7 +2420,7 @@ newButton("Run Code",
     function()
         local Remote = selected and selected.Remote
         if Remote then
-            TextLabel.Text = "Executing..."
+            UI.TooltipText.Text = "Executing..."
             xpcall(function()
                 local returnvalue
                 if Remote:IsA("RemoteEvent") or Remote:IsA("UnreliableRemoteEvent") then
@@ -2386,13 +2429,13 @@ newButton("Run Code",
                     returnvalue = Remote:InvokeServer(unpack(selected.args))
                 end
 
-                TextLabel.Text = ("Executed successfully!\n%s"):format(v2s(returnvalue))
+                UI.TooltipText.Text = ("Executed successfully!\n%s"):format(v2s(returnvalue))
             end,function(err)
-                TextLabel.Text = ("Execution error!\n%s"):format(err)
+                UI.TooltipText.Text = ("Execution error!\n%s"):format(err)
             end)
             return
         end
-        TextLabel.Text = "Source not found"
+        UI.TooltipText.Text = "Source not found"
     end
 )
 
@@ -2406,7 +2449,7 @@ newButton(
                 selected.Source = rawget(getfenv(selected.Function),"script")
             end
             setclipboard(v2s(selected.Source))
-            TextLabel.Text = "Done!"
+            UI.TooltipText.Text = "Done!"
         end
     end
 )
@@ -2466,9 +2509,9 @@ function()
             selected.Function = v2v({functionInfo = info})
         end
         codebox:setRaw("-- Calling function info\n-- Generated by the SimpleSpy V3 serializer\n\n"..selected.Function)
-        TextLabel.Text = "Done! Function info generated by the SimpleSpy V3 Serializer."
+        UI.TooltipText.Text = "Done! Function info generated by the SimpleSpy V3 Serializer."
     else
-        TextLabel.Text = "Error! Selected function was not found."
+        UI.TooltipText.Text = "Error! Selected function was not found."
     end
 end)
 
@@ -2477,9 +2520,9 @@ newButton(
     "Clr Logs",
     function() return "Click to clear logs" end,
     function()
-        TextLabel.Text = "Clearing..."
+        UI.TooltipText.Text = "Clearing..."
         clear(logs)
-        for i,v in next, LogList:GetChildren() do
+        for i,v in next, UI.LogList:GetChildren() do
             if not v:IsA("UIListLayout") and not v:IsA("UIStroke") then
                 v:Destroy()
             end
@@ -2489,7 +2532,7 @@ newButton(
         resetQuantumInspector()
         updateRemoteCanvas()
         updateQuantumStatus()
-        TextLabel.Text = "Logs cleared!"
+        UI.TooltipText.Text = "Logs cleared!"
     end
 )
 
@@ -2500,7 +2543,7 @@ newButton(
     function()
         if selected then
             blacklist[OldDebugId(selected.Remote)] = true
-            TextLabel.Text = "Excluded!"
+            UI.TooltipText.Text = "Excluded!"
         end
     end
 )
@@ -2512,7 +2555,7 @@ newButton(
     function()
         if selected then
             blacklist[selected.Name] = true
-            TextLabel.Text = "Excluded!"
+            UI.TooltipText.Text = "Excluded!"
         end
     end
 )
@@ -2522,7 +2565,7 @@ newButton("Clr Blacklist",
 function() return "Click to clear the blacklist.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable." end,
 function()
     blacklist = {}
-    TextLabel.Text = "Blacklist cleared!"
+    UI.TooltipText.Text = "Blacklist cleared!"
 end)
 
 --- Prevents the selected.Log Remote from firing the server (still logged)
@@ -2532,7 +2575,7 @@ newButton(
     function()
         if selected then
             blocklist[OldDebugId(selected.Remote)] = true
-            TextLabel.Text = "Excluded!"
+            UI.TooltipText.Text = "Excluded!"
         end
     end
 )
@@ -2543,7 +2586,7 @@ newButton("Block (n)",function()
     function()
         if selected then
             blocklist[selected.Name] = true
-            TextLabel.Text = "Excluded!"
+            UI.TooltipText.Text = "Excluded!"
         end
     end
 )
@@ -2554,7 +2597,7 @@ newButton(
     function() return "Click to stop blocking remotes.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server." end,
     function()
         blocklist = {}
-        TextLabel.Text = "Blocklist cleared!"
+        UI.TooltipText.Text = "Blocklist cleared!"
     end
 )
 
@@ -2580,12 +2623,12 @@ newButton("Decompile",
                     end)
                 end
                 codebox:setRaw(DecompiledScripts[Source] or "--No Source Found")
-                TextLabel.Text = "Done!"
+                UI.TooltipText.Text = "Done!"
             else
-                TextLabel.Text = "Source not found!"
+                UI.TooltipText.Text = "Source not found!"
             end
         else
-            TextLabel.Text = "Missing function (decompile)"
+            UI.TooltipText.Text = "Missing function (decompile)"
         end
     end
 )
@@ -2613,7 +2656,7 @@ newButton(
     function() return string.format("[%s] Toggle function info (because it can cause lag in some games)", configs.funcEnabled and "ENABLED" or "DISABLED") end,
     function()
         configs.funcEnabled = not configs.funcEnabled
-        TextLabel.Text = string.format("[%s] Toggle function info (because it can cause lag in some games)", configs.funcEnabled and "ENABLED" or "DISABLED")
+        UI.TooltipText.Text = string.format("[%s] Toggle function info (because it can cause lag in some games)", configs.funcEnabled and "ENABLED" or "DISABLED")
     end
 )
 
@@ -2622,7 +2665,7 @@ newButton(
     function() return string.format("[%s] [BETA] Intelligently detects and excludes spammy remote calls from logs", configs.autoblock and "ENABLED" or "DISABLED") end,
     function()
         configs.autoblock = not configs.autoblock
-        TextLabel.Text = string.format("[%s] [BETA] Intelligently detects and excludes spammy remote calls from logs", configs.autoblock and "ENABLED" or "DISABLED")
+        UI.TooltipText.Text = string.format("[%s] [BETA] Intelligently detects and excludes spammy remote calls from logs", configs.autoblock and "ENABLED" or "DISABLED")
         history = {}
         excluding = {}
     end
@@ -2633,7 +2676,7 @@ newButton("Logcheckcaller",function()
 end,
 function()
     configs.logcheckcaller = not configs.logcheckcaller
-    TextLabel.Text = ("[%s] Log remotes fired by the client"):format(configs.logcheckcaller and "ENABLED" or "DISABLED")
+    UI.TooltipText.Text = ("[%s] Log remotes fired by the client"):format(configs.logcheckcaller and "ENABLED" or "DISABLED")
 end)
 
 --[[newButton("Log returnvalues",function()
@@ -2641,7 +2684,7 @@ end)
 end,
 function()
     configs.logreturnvalues = not configs.logreturnvalues
-    TextLabel.Text = ("[BETA] [%s] Log RemoteFunction's return values"):format(configs.logreturnvalues and "ENABLED" or "DISABLED")
+    UI.TooltipText.Text = ("[BETA] [%s] Log RemoteFunction's return values"):format(configs.logreturnvalues and "ENABLED" or "DISABLED")
 end)]]
 
 newButton("Advanced Info",function()
@@ -2649,7 +2692,7 @@ newButton("Advanced Info",function()
 end,
 function()
     configs.advancedinfo = not configs.advancedinfo
-    TextLabel.Text = ("[%s] Display more remoteinfo"):format(configs.advancedinfo and "ENABLED" or "DISABLED")
+    UI.TooltipText.Text = ("[%s] Display more remoteinfo"):format(configs.advancedinfo and "ENABLED" or "DISABLED")
 end)
 
 newButton("Join Discord",function()
@@ -2657,7 +2700,7 @@ newButton("Join Discord",function()
 end,
 function()
     setclipboard("https://discord.com/invite/AWS6ez9")
-    TextLabel.Text = "Copied invite to your clipboard"
+    UI.TooltipText.Text = "Copied invite to your clipboard"
     if request then
         request({Url = 'http://127.0.0.1:6463/rpc?v=1',Method = 'POST',Headers = {['Content-Type'] = 'application/json', Origin = 'https://discord.com'},Body = http:JSONEncode({cmd = 'INVITE_BROWSER',nonce = http:GenerateGUID(false),args = {code = 'AWS6ez9'}})})
     end
@@ -2676,7 +2719,7 @@ if configs.supersecretdevtoggle then
     function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))()
     end)
-    local SuperSecretFolder = Create("Folder",{Parent = SimpleSpy3})
+    local SuperSecretFolder = Create("Folder",{Parent = UI.SimpleSpy3})
     newButton("SUPER SECRET BUTTON",function()
         return "You dont need a discription you already know what it does"
     end,
