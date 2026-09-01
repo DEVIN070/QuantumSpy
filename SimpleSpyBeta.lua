@@ -296,12 +296,13 @@ local function createSection(parent, name, position, size)
     local section = Create("Frame", {Name = name .. "Section", Parent = parent, BackgroundColor3 = Quantum.Panel, BorderSizePixel = 0, Position = position, Size = size})
     local titleWidth = math.max(58, #name * 7 + 18)
     local legendX = 12
+    local legendBackground = parent.BackgroundColor3
     Create("Frame", {Name = "BorderTopLeft", Parent = section, BackgroundColor3 = Quantum.Border, BorderSizePixel = 0, Size = UDim2.fromOffset(legendX - 4, 1), ZIndex = 3})
     Create("Frame", {Name = "BorderTopRight", Parent = section, BackgroundColor3 = Quantum.Border, BorderSizePixel = 0, Position = UDim2.fromOffset(legendX + titleWidth, 0), Size = UDim2.new(1, -legendX - titleWidth, 0, 1), ZIndex = 3})
     Create("Frame", {Name = "BorderBottom", Parent = section, BackgroundColor3 = Quantum.Border, BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, -1), Size = UDim2.new(1, 0, 0, 1), ZIndex = 3})
     Create("Frame", {Name = "BorderLeft", Parent = section, BackgroundColor3 = Quantum.Border, BorderSizePixel = 0, Size = UDim2.new(0, 1, 1, 0), ZIndex = 3})
     Create("Frame", {Name = "BorderRight", Parent = section, BackgroundColor3 = Quantum.Border, BorderSizePixel = 0, Position = UDim2.new(1, -1, 0, 0), Size = UDim2.new(0, 1, 1, 0), ZIndex = 3})
-    Create("TextLabel", {Name = "SectionLabel", Parent = section, BackgroundColor3 = Quantum.Panel, BorderSizePixel = 0, Position = UDim2.fromOffset(legendX, -8), Size = UDim2.fromOffset(titleWidth, 16), ZIndex = 5, Font = Enum.Font.Code, Text = lower(name), TextColor3 = Quantum.TextSecondary, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center})
+    Create("TextLabel", {Name = "SectionLabel", Parent = section, BackgroundColor3 = legendBackground, BorderSizePixel = 0, Position = UDim2.fromOffset(legendX, -8), Size = UDim2.fromOffset(titleWidth, 16), ZIndex = 5, Font = Enum.Font.Code, Text = lower(name), TextColor3 = Quantum.TextSecondary, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center})
     return section
 end
 
