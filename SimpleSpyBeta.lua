@@ -251,8 +251,8 @@ local HEADER_HEIGHT = 64
 local STATUS_HEIGHT = 32
 local SIDEBAR_WIDTH = 270
 local TOOLBAR_HEIGHT = 103
-local MINIMUM_WIDTH = 760
-local MINIMUM_HEIGHT = 540
+local MINIMUM_WIDTH = 850
+local MINIMUM_HEIGHT = 520
 
 local function quantumTween(object, properties, duration, style, direction)
     local tweenObject = TweenService:Create(object, TweenInfo.new(duration or 0.12, style or Enum.EasingStyle.Quad, direction or Enum.EasingDirection.Out), properties)
@@ -336,8 +336,8 @@ end
 
 local function createInspectorRow(parent, label, valueColor, layoutOrder)
     local row = Create("Frame", {Parent = parent, BackgroundTransparency = 1, LayoutOrder = layoutOrder or 0, Size = UDim2.new(1, 0, 0, 9), ZIndex = 4})
-    Create("TextLabel", {Parent = row, BackgroundTransparency = 1, Size = UDim2.fromOffset(62, 9), Font = Enum.Font.Code, Text = label, TextColor3 = Quantum.TextMuted, TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5})
-    return Create("TextLabel", {Parent = row, BackgroundTransparency = 1, Position = UDim2.fromOffset(62, 0), Size = UDim2.new(1, -62, 0, 9), Font = Enum.Font.Code, Text = "—", TextColor3 = valueColor or Quantum.Text, TextSize = 9, TextTruncate = Enum.TextTruncate.AtEnd, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5})
+    Create("TextLabel", {Parent = row, BackgroundTransparency = 1, Size = UDim2.fromOffset(84, 9), Font = Enum.Font.Code, Text = label, TextColor3 = Quantum.TextMuted, TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5})
+    return Create("TextLabel", {Parent = row, BackgroundTransparency = 1, Position = UDim2.fromOffset(84, 0), Size = UDim2.new(1, -84, 0, 9), Font = Enum.Font.Code, Text = "—", TextColor3 = valueColor or Quantum.Text, TextSize = 9, TextTruncate = Enum.TextTruncate.AtEnd, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5})
 end
 
 local function createToolbarButton(parent, name, isPrimary)
@@ -456,6 +456,7 @@ local StatusRemotesText = Create("TextLabel",{Parent = StatusBar,BackgroundTrans
 local ReadyText = Create("TextLabel",{Parent = StatusBar,BackgroundTransparency = 1,Position = UDim2.new(1, -66, 0, 3),Size = UDim2.fromOffset(54, 18),Font = Enum.Font.Code,Text = "ready",TextColor3 = Quantum.Cyan,TextSize = 10,TextXAlignment = Enum.TextXAlignment.Right,ZIndex = 6})
 
 local Layout = {SidebarWidth = SIDEBAR_WIDTH, DividerDragging = false}
+local Resize = {Active = false, Direction = nil, StartMouse = nil, StartPosition = nil, StartSize = nil}
 local PaneDivider = Create("TextButton",{Name = "PaneDivider",Parent = Background,BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.fromOffset(SIDEBAR_WIDTH - 3, HEADER_HEIGHT),Size = UDim2.new(0, 6, 1, -HEADER_HEIGHT - STATUS_HEIGHT),ZIndex = 10,AutoButtonColor = false,Text = ""})
 local PaneDividerLine = Create("Frame",{Name = "DividerLine",Parent = PaneDivider,BackgroundColor3 = Quantum.BorderSubtle,BorderSizePixel = 0,Position = UDim2.fromOffset(2, 0),Size = UDim2.new(0, 1, 1, 0),ZIndex = 11})
 
@@ -497,6 +498,7 @@ end
         LogList = LogList,
         RemoteListLayout = UIListLayout,
         RightPanel = RightPanel,
+        InspectorHeader = InspectorHeader,
         InspectorSelection = InspectorSelection,
         RemoteNameValue = RemoteNameValue,
         RemoteTypeValue = RemoteTypeValue,
@@ -504,10 +506,13 @@ end
         RemoteCallsValue = RemoteCallsValue,
         RemotePathValue = RemotePathValue,
         RemoteScriptValue = RemoteScriptValue,
+        ArgumentsSection = ArgumentsSection,
         ArgumentsScroll = ArgumentsScroll,
         ArgumentsText = ArgumentsText,
+        CodeSection = CodeSection,
         CodeBox = CodeBox,
         CopyCodeButton = CopyCodeButton,
+        ActionsSection = ActionsSection,
         ActionsScroller = ScrollingFrame,
         ActionsGrid = UIGridLayout,
         StatusBar = StatusBar,
@@ -522,6 +527,7 @@ end
         PaneDivider = PaneDivider,
         PaneDividerLine = PaneDividerLine,
         Layout = Layout,
+        Resize = Resize,
     }
 end
 
@@ -885,24 +891,16 @@ function bringBackOnResize()
     else
         maximizeSize()
     end
-    local currentX = UI.Background.AbsolutePosition.X
-    local currentY = UI.Background.AbsolutePosition.Y
+    local margin = 4
+    local currentX = math.round(UI.Background.AbsolutePosition.X)
+    local currentY = math.round(UI.Background.AbsolutePosition.Y)
     local viewportSize = workspace.CurrentCamera.ViewportSize
-    if (currentX < 0) or (currentX > (viewportSize.X - UI.Background.AbsoluteSize.X)) then
-        if currentX < 0 then
-            currentX = 0
-        else
-            currentX = viewportSize.X - UI.Background.AbsoluteSize.X
-        end
-    end
-    if (currentY < 0) or (currentY > (viewportSize.Y - (closed and HEADER_HEIGHT or UI.Background.AbsoluteSize.Y) - GuiInset.Y)) then
-        if currentY < 0 then
-            currentY = 0
-        else
-            currentY = viewportSize.Y - (closed and HEADER_HEIGHT or UI.Background.AbsoluteSize.Y) - GuiInset.Y
-        end
-    end
-    TweenService.Create(TweenService, UI.Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentX, 0, currentY)}):Play()
+    local visibleHeight = closed and HEADER_HEIGHT or UI.Background.AbsoluteSize.Y
+    local maximumX = math.max(margin, math.round(viewportSize.X - UI.Background.AbsoluteSize.X - margin))
+    local maximumY = math.max(margin, math.round(viewportSize.Y - visibleHeight - GuiInset.Y - margin))
+    currentX = math.clamp(currentX, margin, maximumX)
+    currentY = math.clamp(currentY, margin, maximumY)
+    TweenService.Create(TweenService, UI.Background, TweenInfo.new(0.1), {Position = UDim2.fromOffset(currentX, currentY)}):Play()
 end
 
 --- Drags gui (so long as mouse is held down)
@@ -917,23 +915,15 @@ function onBarInput(input)
             connections["drag"] = RunService.RenderStepped:Connect(function()
                 local newPos = UserInputService:GetMouseLocation()
                 if newPos ~= lastPos then
-                    local currentX = (offset + newPos).X
-                    local currentY = (offset + newPos).Y
+                    local margin = 4
+                    local currentX = math.round((offset + newPos).X)
+                    local currentY = math.round((offset + newPos).Y)
                     local viewportSize = workspace.CurrentCamera.ViewportSize
-                    if (currentX < 0 and currentX < currentPos.X) or (currentX > (viewportSize.X - UI.TopBar.AbsoluteSize.X) and currentX > currentPos.X) then
-                        if currentX < 0 then
-                            currentX = 0
-                        else
-                            currentX = viewportSize.X - UI.TopBar.AbsoluteSize.X
-                        end
-                    end
-                    if (currentY < 0 and currentY < currentPos.Y) or (currentY > (viewportSize.Y - (closed and HEADER_HEIGHT or UI.Background.AbsoluteSize.Y) - GuiInset.Y) and currentY > currentPos.Y) then
-                        if currentY < 0 then
-                            currentY = 0
-                        else
-                            currentY = viewportSize.Y - (closed and HEADER_HEIGHT or UI.Background.AbsoluteSize.Y) - GuiInset.Y
-                        end
-                    end
+                    local visibleHeight = closed and HEADER_HEIGHT or UI.Background.AbsoluteSize.Y
+                    local maximumX = math.max(margin, math.round(viewportSize.X - UI.Background.AbsoluteSize.X - margin))
+                    local maximumY = math.max(margin, math.round(viewportSize.Y - visibleHeight - GuiInset.Y - margin))
+                    currentX = math.clamp(currentX, margin, maximumX)
+                    currentY = math.clamp(currentY, margin, maximumY)
                     currentPos = Vector2.new(currentX, currentY)
                     lastPos = newPos
                     TweenService.Create(TweenService, UI.Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentPos.X, 0, currentPos.Y)}):Play()
@@ -977,6 +967,11 @@ function toggleMinimize(override)
         UI.LeftPanel.Visible = true
         UI.RightPanel.Visible = not sideClosed
         UI.StatusBar.Visible = true
+        local viewportSize = workspace.CurrentCamera.ViewportSize
+        UI.BackgroundConstraint.MaxSize = Vector2.new(
+            math.max(MINIMUM_WIDTH, math.round(viewportSize.X - 8)),
+            math.max(MINIMUM_HEIGHT, math.round(viewportSize.Y - GuiInset.Y - 8))
+        )
         quantumTween(UI.Background, {Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X, expandedWindowHeight)}, 0.18, Enum.EasingStyle.Quint)
         wait(0.12)
         quantumTween(UI.LeftPanel, {GroupTransparency = 0}, 0.14)
@@ -1054,14 +1049,28 @@ end
 function isInResizeRange(p)
     local relativeP = p - UI.Background.AbsolutePosition
     local backgroundSize = UI.Background.AbsoluteSize
-    local range = 5
-    if relativeP.X >= backgroundSize.X - range and relativeP.Y >= backgroundSize.Y - range
-        and relativeP.X <= backgroundSize.X and relativeP.Y <= backgroundSize.Y then
-        return true, 'B'
-    elseif relativeP.X >= backgroundSize.X - range and relativeP.X <= backgroundSize.X then
-        return true, 'X'
-    elseif relativeP.Y >= backgroundSize.Y - range and relativeP.Y <= backgroundSize.Y then
-        return true, 'Y'
+    local range = 6
+    local onLeft = relativeP.X >= 0 and relativeP.X <= range
+    local onRight = relativeP.X >= backgroundSize.X - range and relativeP.X <= backgroundSize.X
+    local onTop = relativeP.Y >= 0 and relativeP.Y <= range
+    local onBottom = relativeP.Y >= backgroundSize.Y - range and relativeP.Y <= backgroundSize.Y
+
+    if onTop and onLeft then
+        return true, "TL"
+    elseif onTop and onRight then
+        return true, "TR"
+    elseif onBottom and onLeft then
+        return true, "BL"
+    elseif onBottom and onRight then
+        return true, "BR"
+    elseif onLeft then
+        return true, "L"
+    elseif onRight then
+        return true, "R"
+    elseif onTop then
+        return true, "T"
+    elseif onBottom then
+        return true, "B"
     end
     return false
 end
@@ -1088,15 +1097,15 @@ function mouseEntered()
         if mouseInGui and getgenv().SimpleSpyExecuted then
             local mouseLocation = UserInputService:GetMouseLocation() - GuiInset
             customCursor.Position = UDim2.fromOffset(mouseLocation.X - customCursor.AbsoluteSize.X / 2, mouseLocation.Y - customCursor.AbsoluteSize.Y / 2)
-            local inRange, type = isInResizeRange(mouseLocation)
+            local inRange, resizeDirection = isInResizeRange(mouseLocation)
             if inRange and not closed then
-                if not sideClosed then
-                    customCursor.Image = type == 'B' and "rbxassetid://6065821980" or type == 'X' and "rbxassetid://6065821086" or type == 'Y' and "rbxassetid://6065821596"
-                elseif type == 'Y' or type == 'B' then
-                    customCursor.Image = "rbxassetid://6065821596"
-                end
+                local isHorizontal = resizeDirection == "L" or resizeDirection == "R"
+                local isVertical = resizeDirection == "T" or resizeDirection == "B"
+                customCursor.Image = isHorizontal and "rbxassetid://6065821086" or isVertical and "rbxassetid://6065821596" or "rbxassetid://6065821980"
+                customCursor.Rotation = (resizeDirection == "TR" or resizeDirection == "BL") and 90 or 0
             elseif customCursor.Image ~= "rbxassetid://6065775281" then
                 customCursor.Image = "rbxassetid://6065775281"
+                customCursor.Rotation = 0
             end
         else
             connections["SIMPLESPY_CURSOR"]:Disconnect()
@@ -1119,30 +1128,116 @@ function mouseMoved()
     end
 end
 
---- Adjusts the ui elements to the 'Maximized' size
-function maximizeSize(speed)
-    speed = speed or 0.08
-    local contentHeight = UI.Background.AbsoluteSize.Y - HEADER_HEIGHT - STATUS_HEIGHT
-    local maximumSidebarWidth = math.max(220, UI.Background.AbsoluteSize.X - 360)
-    local sidebarWidth = math.clamp(UI.Layout.SidebarWidth, 220, maximumSidebarWidth)
-    UI.Layout.SidebarWidth = sidebarWidth
-    quantumTween(UI.LeftPanel, {Position = UDim2.fromOffset(0, HEADER_HEIGHT), Size = UDim2.fromOffset(sidebarWidth, contentHeight)}, speed)
-    quantumTween(UI.RightPanel, {Position = UDim2.fromOffset(sidebarWidth, HEADER_HEIGHT), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X - sidebarWidth, contentHeight)}, speed)
-    quantumTween(UI.PaneDivider, {Position = UDim2.fromOffset(sidebarWidth - 3, HEADER_HEIGHT), Size = UDim2.new(0, 6, 0, contentHeight)}, speed)
-    UI.PaneDivider.Visible = not closed and not sideClosed
-    quantumTween(UI.TopBar, {Position = UDim2.fromOffset(9, 9), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X - 18, HEADER_HEIGHT - 20)}, speed)
-    quantumTween(UI.StatusBar, {Position = UDim2.fromOffset(9, UI.Background.AbsoluteSize.Y - STATUS_HEIGHT + 4), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X - 18, STATUS_HEIGHT - 8)}, speed)
+function applyResponsiveProperties(object, properties, speed)
+    if speed and speed > 0 then
+        quantumTween(object, properties, speed)
+    else
+        for property, value in next, properties do
+            object[property] = value
+        end
+    end
 end
 
---- Adjusts the ui elements to close the side
+--- Centrally lays out the window without rebuilding any logged or generated content.
+function updateResponsiveLayout(speed, preserveSidebarWidth)
+    local width = math.round(UI.Background.AbsoluteSize.X)
+    local height = math.round(UI.Background.AbsoluteSize.Y)
+    applyResponsiveProperties(UI.TopBar, {Position = UDim2.fromOffset(9, 9), Size = UDim2.fromOffset(width - 18, HEADER_HEIGHT - 20)}, speed)
+
+    if closed or height < MINIMUM_HEIGHT then
+        return
+    end
+
+    local contentHeight = height - HEADER_HEIGHT - STATUS_HEIGHT
+    applyResponsiveProperties(UI.StatusBar, {Position = UDim2.fromOffset(9, height - STATUS_HEIGHT + 4), Size = UDim2.fromOffset(width - 18, STATUS_HEIGHT - 8)}, speed)
+
+    if sideClosed then
+        UI.PaneDivider.Visible = false
+        applyResponsiveProperties(UI.LeftPanel, {Position = UDim2.fromOffset(0, HEADER_HEIGHT), Size = UDim2.fromOffset(width, contentHeight)}, speed)
+        applyResponsiveProperties(UI.RightPanel, {Position = UDim2.fromOffset(width, HEADER_HEIGHT), Size = UDim2.fromOffset(0, contentHeight)}, speed)
+        return
+    end
+
+    local maximumSidebarWidth = math.min(380, width - 430)
+    local sidebarWidth = preserveSidebarWidth and UI.Layout.SidebarWidth or math.clamp(math.round(width * 0.27), 250, maximumSidebarWidth)
+    sidebarWidth = math.clamp(math.round(sidebarWidth), 250, maximumSidebarWidth)
+    UI.Layout.SidebarWidth = sidebarWidth
+
+    applyResponsiveProperties(UI.LeftPanel, {Position = UDim2.fromOffset(0, HEADER_HEIGHT), Size = UDim2.fromOffset(sidebarWidth, contentHeight)}, speed)
+    applyResponsiveProperties(UI.RightPanel, {Position = UDim2.fromOffset(sidebarWidth, HEADER_HEIGHT), Size = UDim2.fromOffset(width - sidebarWidth, contentHeight)}, speed)
+    applyResponsiveProperties(UI.PaneDivider, {Position = UDim2.fromOffset(sidebarWidth - 3, HEADER_HEIGHT), Size = UDim2.fromOffset(6, contentHeight)}, speed)
+    UI.PaneDivider.Visible = true
+
+    local topInset = 8
+    local bottomInset = 2
+    local sectionGap = 8
+    local usableHeight = contentHeight - topInset - bottomInset - sectionGap * 3
+    local remoteHeight = math.clamp(math.round(usableHeight * 0.15), 74, 104)
+    local argumentsHeight = math.clamp(math.round(usableHeight * 0.23), 90, 180)
+    local actionsHeight = math.clamp(math.round(usableHeight * 0.20), 93, 116)
+    local codeHeight = usableHeight - remoteHeight - argumentsHeight - actionsHeight
+    local argumentsY = topInset + remoteHeight + sectionGap
+    local codeY = argumentsY + argumentsHeight + sectionGap
+    local actionsY = codeY + codeHeight + sectionGap
+    local rightWidth = width - sidebarWidth - 19
+
+    applyResponsiveProperties(UI.InspectorHeader, {Position = UDim2.fromOffset(9, topInset), Size = UDim2.fromOffset(rightWidth, remoteHeight)}, speed)
+    applyResponsiveProperties(UI.ArgumentsSection, {Position = UDim2.fromOffset(9, argumentsY), Size = UDim2.fromOffset(rightWidth, argumentsHeight)}, speed)
+    applyResponsiveProperties(UI.CodeSection, {Position = UDim2.fromOffset(9, codeY), Size = UDim2.fromOffset(rightWidth, codeHeight)}, speed)
+    applyResponsiveProperties(UI.ActionsSection, {Position = UDim2.fromOffset(9, actionsY), Size = UDim2.fromOffset(rightWidth, actionsHeight)}, speed)
+
+    if updateFunctionCanvas then
+        updateFunctionCanvas()
+    end
+end
+
+--- Adjusts the ui elements to the expanded layout.
+function maximizeSize(speed)
+    updateResponsiveLayout(speed or 0.08, false)
+end
+
+--- Adjusts the ui elements while the inspector tray is closed.
 function minimizeSize(speed)
-    speed = speed or 0.08
-    local contentHeight = UI.Background.AbsoluteSize.Y - HEADER_HEIGHT - STATUS_HEIGHT
-    UI.PaneDivider.Visible = false
-    quantumTween(UI.LeftPanel, {Position = UDim2.fromOffset(0, HEADER_HEIGHT), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X, contentHeight)}, speed)
-    quantumTween(UI.RightPanel, {Position = UDim2.fromOffset(UI.Background.AbsoluteSize.X, HEADER_HEIGHT), Size = UDim2.fromOffset(0, contentHeight)}, speed)
-    quantumTween(UI.TopBar, {Position = UDim2.fromOffset(9, 9), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X - 18, HEADER_HEIGHT - 20)}, speed)
-    quantumTween(UI.StatusBar, {Position = UDim2.fromOffset(9, UI.Background.AbsoluteSize.Y - STATUS_HEIGHT + 4), Size = UDim2.fromOffset(UI.Background.AbsoluteSize.X - 18, STATUS_HEIGHT - 8)}, speed)
+    updateResponsiveLayout(speed or 0.08, true)
+end
+
+function updateWindowResize(mousePosition)
+    local resize = UI.Resize
+    if not resize.Active or not resize.Direction then
+        return
+    end
+
+    local margin = 4
+    local viewportSize = workspace.CurrentCamera.ViewportSize
+    local maximumRight = math.round(viewportSize.X - margin)
+    local maximumBottom = math.round(viewportSize.Y - GuiInset.Y - margin)
+    local delta = mousePosition - resize.StartMouse
+    local direction = resize.Direction
+    local startRight = resize.StartPosition.X + resize.StartSize.X
+    local startBottom = resize.StartPosition.Y + resize.StartSize.Y
+    local x = resize.StartPosition.X
+    local y = resize.StartPosition.Y
+    local width = resize.StartSize.X
+    local height = resize.StartSize.Y
+
+    if direction:find("L", 1, true) then
+        x = math.clamp(math.round(resize.StartPosition.X + delta.X), margin, startRight - MINIMUM_WIDTH)
+        width = startRight - x
+    elseif direction:find("R", 1, true) then
+        local right = math.clamp(math.round(startRight + delta.X), resize.StartPosition.X + MINIMUM_WIDTH, maximumRight)
+        width = right - resize.StartPosition.X
+    end
+
+    if direction:find("T", 1, true) then
+        y = math.clamp(math.round(resize.StartPosition.Y + delta.Y), margin, startBottom - MINIMUM_HEIGHT)
+        height = startBottom - y
+    elseif direction:find("B", 1, true) then
+        local bottom = math.clamp(math.round(startBottom + delta.Y), resize.StartPosition.Y + MINIMUM_HEIGHT, maximumBottom)
+        height = bottom - resize.StartPosition.Y
+    end
+
+    UI.Background.Position = UDim2.fromOffset(math.round(x), math.round(y))
+    UI.Background.Size = UDim2.fromOffset(math.round(width), math.round(height))
 end
 
 table.insert(connections, UI.PaneDivider.MouseEnter:Connect(function()
@@ -1160,37 +1255,41 @@ table.insert(connections, UI.PaneDivider.MouseButton1Down:Connect(function()
     end
 end))
 table.insert(connections, UserInputService.InputChanged:Connect(function(input)
-    if UI.Layout.DividerDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        UI.Layout.SidebarWidth = UserInputService:GetMouseLocation().X - UI.Background.AbsolutePosition.X
-        maximizeSize(0)
+    if UI.Resize.Active and input.UserInputType == Enum.UserInputType.MouseMovement then
+        updateWindowResize(UserInputService:GetMouseLocation() - GuiInset)
+    elseif UI.Layout.DividerDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        UI.Layout.SidebarWidth = math.round(UserInputService:GetMouseLocation().X - GuiInset.X - UI.Background.AbsolutePosition.X)
+        updateResponsiveLayout(0, true)
     end
 end))
 table.insert(connections, UserInputService.InputEnded:Connect(function(input)
-    if UI.Layout.DividerDragging and input.UserInputType == Enum.UserInputType.MouseButton1 then
-        UI.Layout.DividerDragging = false
-        quantumTween(UI.PaneDividerLine, {BackgroundColor3 = Quantum.BorderSubtle}, 0.12)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if UI.Resize.Active then
+            UI.Resize.Active = false
+            UI.Resize.Direction = nil
+            UI.Resize.StartMouse = nil
+            UI.Resize.StartPosition = nil
+            UI.Resize.StartSize = nil
+        end
+        if UI.Layout.DividerDragging then
+            UI.Layout.DividerDragging = false
+            quantumTween(UI.PaneDividerLine, {BackgroundColor3 = Quantum.BorderSubtle}, 0.12)
+        end
     end
 end))
 
 --- Ensures size is within screensize limitations
 function validateSize()
-    local x, y = UI.Background.AbsoluteSize.X, UI.Background.AbsoluteSize.Y
+    local margin = 4
     local screenSize = workspace.CurrentCamera.ViewportSize
-    if x + UI.Background.AbsolutePosition.X > screenSize.X then
-        if screenSize.X - UI.Background.AbsolutePosition.X >= MINIMUM_WIDTH then
-            x = screenSize.X - UI.Background.AbsolutePosition.X
-        else
-            x = MINIMUM_WIDTH
-        end
-    end
-    if y + UI.Background.AbsolutePosition.Y > screenSize.Y then
-        if screenSize.Y - UI.Background.AbsolutePosition.Y >= MINIMUM_HEIGHT then
-            y = screenSize.Y - UI.Background.AbsolutePosition.Y
-        else
-            y = MINIMUM_HEIGHT
-        end
-    end
-    UI.Background.Size = UDim2.fromOffset(x, y)
+    local maximumWidth = math.max(MINIMUM_WIDTH, math.round(screenSize.X - margin * 2))
+    local maximumHeight = math.max(MINIMUM_HEIGHT, math.round(screenSize.Y - GuiInset.Y - margin * 2))
+    UI.BackgroundConstraint.MaxSize = Vector2.new(maximumWidth, closed and HEADER_HEIGHT or maximumHeight)
+    local position = UI.Background.AbsolutePosition
+    local width = math.clamp(math.round(UI.Background.AbsoluteSize.X), MINIMUM_WIDTH, math.max(MINIMUM_WIDTH, screenSize.X - margin - position.X))
+    local minimumHeight = closed and HEADER_HEIGHT or MINIMUM_HEIGHT
+    local height = math.clamp(math.round(UI.Background.AbsoluteSize.Y), minimumHeight, math.max(minimumHeight, screenSize.Y - GuiInset.Y - margin - position.Y))
+    UI.Background.Size = UDim2.fromOffset(width, height)
 end
 
 --- Called on user input while mouse in 'Background' frame
@@ -1218,43 +1317,13 @@ function backgroundUserInput(input)
         return
     end
     local mousePos = UserInputService:GetMouseLocation() - GuiInset
-    local inResizeRange, type = isInResizeRange(mousePos)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and inResizeRange then
-        local lastPos = UserInputService:GetMouseLocation()
-        local offset = UI.Background.AbsoluteSize - lastPos
-        local currentPos = lastPos + offset
-        if not connections["SIMPLESPY_RESIZE"] then
-            connections["SIMPLESPY_RESIZE"] = RunService.RenderStepped:Connect(function()
-                local newPos = UserInputService:GetMouseLocation()
-                if newPos ~= lastPos then
-                    local currentX = (newPos + offset).X
-                    local currentY = (newPos + offset).Y
-                    if currentX < MINIMUM_WIDTH then
-                        currentX = MINIMUM_WIDTH
-                    end
-                    if currentY < MINIMUM_HEIGHT then
-                        currentY = MINIMUM_HEIGHT
-                    end
-                    currentPos = Vector2.new(currentX, currentY)
-                    UI.Background.Size = UDim2.fromOffset((not sideClosed and not closed and (type == "X" or type == "B")) and currentPos.X or UI.Background.AbsoluteSize.X, (--[[(not sideClosed or currentPos.X <= UI.LeftPanel.AbsolutePosition.X + UI.LeftPanel.AbsoluteSize.X) and]] not closed and (type == "Y" or type == "B")) and currentPos.Y or UI.Background.AbsoluteSize.Y)
-                    validateSize()
-                    if sideClosed then
-                        minimizeSize()
-                    else
-                        maximizeSize()
-                    end
-                    lastPos = newPos
-                end
-            end)
-        end
-        table.insert(connections, UserInputService.InputEnded:Connect(function(inputE)
-            if input == inputE then
-                if connections["SIMPLESPY_RESIZE"] then
-                    connections["SIMPLESPY_RESIZE"]:Disconnect()
-                    connections["SIMPLESPY_RESIZE"] = nil
-                end
-            end
-        end))
+    local inResizeRange, resizeDirection = isInResizeRange(mousePos)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and inResizeRange and not closed then
+        UI.Resize.Active = true
+        UI.Resize.Direction = resizeDirection
+        UI.Resize.StartMouse = mousePos
+        UI.Resize.StartPosition = Vector2.new(math.round(UI.Background.AbsolutePosition.X), math.round(UI.Background.AbsolutePosition.Y))
+        UI.Resize.StartSize = Vector2.new(math.round(UI.Background.AbsoluteSize.X), math.round(UI.Background.AbsoluteSize.Y))
     elseif isInDragRange(mousePos) then
         onBarInput(input)
     end
@@ -1469,6 +1538,9 @@ end
 table.insert(connections, UI.ActionsGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateFunctionCanvas))
 table.insert(connections, UI.ActionsScroller:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateFunctionCanvas))
 table.insert(connections, UI.RemoteListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateRemoteCanvas))
+table.insert(connections, UI.Background:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+    updateResponsiveLayout(0, false)
+end))
 
 --- Allows for toggling of the tooltip and easy setting of le description
 --- @param enable boolean
