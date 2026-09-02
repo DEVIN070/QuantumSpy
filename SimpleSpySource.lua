@@ -357,7 +357,15 @@ end
 local function createQuantumUI()
 local SimpleSpy3 = Create("ScreenGui",{ResetOnSpawn = false})
 local Storage = Create("Folder",{})
-local Background = Create("CanvasGroup",{Name = "Frame",Parent = SimpleSpy3,BackgroundColor3 = Quantum.Background,BorderSizePixel = 0,GroupTransparency = 1,Position = UDim2.new(0, 320, 0, 130),Size = UDim2.new(0, 980, 0, 620),ClipsDescendants = true,ZIndex = 2})
+local Background
+do
+    local currentCamera = workspace.CurrentCamera
+    local viewportSize = currentCamera and currentCamera.ViewportSize or Vector2.new(MINIMUM_WIDTH, MINIMUM_HEIGHT + GuiInset.Y)
+    local availableHeight = math.max(MINIMUM_HEIGHT, viewportSize.Y - GuiInset.Y)
+    local startX = math.max(4, math.round((viewportSize.X - MINIMUM_WIDTH) * 0.5))
+    local startY = math.max(4, math.round((availableHeight - MINIMUM_HEIGHT) * 0.5))
+    Background = Create("CanvasGroup",{Name = "Frame",Parent = SimpleSpy3,BackgroundColor3 = Quantum.Background,BorderSizePixel = 0,GroupTransparency = 1,Position = UDim2.fromOffset(startX, startY),Size = UDim2.fromOffset(MINIMUM_WIDTH, MINIMUM_HEIGHT),ClipsDescendants = true,ZIndex = 2})
+end
 local WindowShadow = Create("ImageLabel",{Name = "WindowShadow",Parent = SimpleSpy3,BackgroundTransparency = 1,Image = "rbxassetid://6015897843",ImageColor3 = Color3.new(0, 0, 0),ImageTransparency = 1,ScaleType = Enum.ScaleType.Slice,SliceCenter = Rect.new(49, 49, 450, 450),ZIndex = 1})
 local function syncWindowShadow()
     WindowShadow.Position = UDim2.new(Background.Position.X.Scale, Background.Position.X.Offset - 12, Background.Position.Y.Scale, Background.Position.Y.Offset - 12)
@@ -634,7 +642,7 @@ local schedulerconnect
 local SimpleSpy = {}
 local topstr = ""
 local bottomstr = ""
-local expandedWindowHeight = 620
+local expandedWindowHeight = MINIMUM_HEIGHT
 local codebox
 local p
 local getnilrequired = false
