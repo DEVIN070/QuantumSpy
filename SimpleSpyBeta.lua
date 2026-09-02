@@ -557,6 +557,7 @@ local ActionOverflowButtons = {}
         ArgumentsScroll = ArgumentsScroll,
         ArgumentsText = ArgumentsText,
         CodeSection = CodeSection,
+        CodeSurface = CodeSurface,
         CodeBox = CodeBox,
         CopyCodeButton = CopyCodeButton,
         ActionsSection = ActionsSection,
@@ -1260,6 +1261,7 @@ function updateResponsiveLayout(speed, preserveSidebarWidth)
     local height = math.round(UI.Background.AbsoluteSize.Y)
     local mode = getLayoutMode(width, height)
     local useInspectorTabs = mode ~= "Full"
+    local ultraCompact = useInspectorTabs and width <= 500
     local isNarrow = width <= 600
     local isVeryNarrow = width <= 600
     local fullHeader = mode == "Full" or closed
@@ -1301,6 +1303,18 @@ function updateResponsiveLayout(speed, preserveSidebarWidth)
     applyResponsiveProperties(UI.MinimizeButton, {Position = UDim2.new(1, -95, 0, controlY), Size = UDim2.fromOffset(25, 25)}, speed)
     applyResponsiveProperties(UI.SpyStatusDot, {Position = UDim2.new(1, -159, 0, fullHeader and 22 or math.round(topBarHeight * 0.5 - 2)), Size = UDim2.fromOffset(5, 5)}, speed)
     applyResponsiveProperties(UI.SpyStatusText, {Position = UDim2.new(1, -150, 0, fullHeader and 16 or math.round(topBarHeight * 0.5 - 9)), Size = UDim2.fromOffset(48, 18)}, speed)
+    if useInspectorTabs then
+        local editorInset = ultraCompact and 4 or 6
+        local editorTop = ultraCompact and 24 or 27
+        local editorBottom = ultraCompact and 4 or 6
+        applyResponsiveProperties(UI.CodeSurface, {Position = UDim2.fromOffset(editorInset, editorTop), Size = UDim2.new(1, -editorInset * 2, 1, -editorTop - editorBottom)}, speed)
+        applyResponsiveProperties(UI.CopyCodeButton, ultraCompact
+            and {Position = UDim2.new(1, -64, 0, 7), Size = UDim2.fromOffset(56, 15)}
+            or {Position = UDim2.new(1, -78, 0, 9), Size = UDim2.fromOffset(66, 17)}, speed)
+    else
+        applyResponsiveProperties(UI.CodeSurface, {Position = UDim2.fromOffset(8, 29), Size = UDim2.new(1, -16, 1, -37)}, speed)
+        applyResponsiveProperties(UI.CopyCodeButton, {Position = UDim2.new(1, -78, 0, 9), Size = UDim2.fromOffset(66, 17)}, speed)
+    end
 
     if closed or height < MINIMUM_HEIGHT then
         UI.ActionsOverflowMenu.Visible = false
@@ -1475,6 +1489,9 @@ function updateResponsiveLayout(speed, preserveSidebarWidth)
 
     if updateFunctionCanvas then
         updateFunctionCanvas()
+    end
+    if UI.ApplyEditorTypography then
+        UI.ApplyEditorTypography()
     end
 end
 
@@ -3063,6 +3080,7 @@ if not getgenv().SimpleSpyExecuted then
             if editorScroller then
                 local editorTextFrame
                 local gutterFrame
+                local lineNumbersFrame
                 for _, child in next, editorScroller:GetChildren() do
                     if child:IsA("Frame") then
                         if child.BackgroundTransparency == 1 then
@@ -3072,27 +3090,92 @@ if not getgenv().SimpleSpyExecuted then
                         end
                     end
                 end
-
-                local function alignEditorSpacing()
-                    if editorTextFrame and editorTextFrame.Parent then
-                        editorTextFrame.Position = UDim2.fromOffset(44, 0)
-                        editorTextFrame.Size = UDim2.new(1, -44, 1, 0)
-                    end
-                    if gutterFrame and gutterFrame.Parent then
-                        gutterFrame.Size = UDim2.new(0, 36, gutterFrame.Size.Y.Scale, gutterFrame.Size.Y.Offset)
-                        for _, child in next, gutterFrame:GetChildren() do
-                            if child:IsA("Frame") and child.BackgroundTransparency == 1 then
-                                child.Position = UDim2.fromOffset(4, 0)
-                                child.Size = UDim2.new(0, 27, 1, 0)
-                            end
+                if gutterFrame then
+                    for _, child in next, gutterFrame:GetChildren() do
+                        if child:IsA("Frame") and child.BackgroundTransparency == 1 then
+                            lineNumbersFrame = child
+                            break
                         end
                     end
                 end
+                local editorRightPadding = Create("Frame",{Name = "EditorRightPadding",Parent = UI.CodeBox,Active = false,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.new(1, -6, 0, 0),Size = UDim2.new(0, 4, 1, -6),ZIndex = UI.CodeBox.ZIndex})
+                local editorBottomPadding = Create("Frame",{Name = "EditorBottomPadding",Parent = UI.CodeBox,Active = false,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.new(0, 44, 1, -6),Size = UDim2.new(1, -50, 0, 4),ZIndex = UI.CodeBox.ZIndex})
+                local lastTypographyKey
+                local lastCanvasWidth = 0
+                local lastCanvasHeight = 0
 
-                alignEditorSpacing()
-                UI.CodeBox:GetPropertyChangedSignal("AbsoluteSize"):Connect(alignEditorSpacing)
-                Create("Frame",{Name = "EditorRightPadding",Parent = UI.CodeBox,Active = false,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.new(1, -6, 0, 0),Size = UDim2.new(0, 4, 1, -6),ZIndex = UI.CodeBox.ZIndex})
-                Create("Frame",{Name = "EditorBottomPadding",Parent = UI.CodeBox,Active = false,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.new(0, 36, 1, -6),Size = UDim2.new(1, -42, 0, 4),ZIndex = UI.CodeBox.ZIndex})
+                local function applyEditorTypography(forceRows)
+                    local mode = UI.Layout.Mode
+                    local ultra = UI.Layout.UseInspectorTabs and UI.Background.AbsoluteSize.X <= 500
+                    local textSize = mode == "Full" and 14 or ultra and 10 or mode == "Thin" and 11 or 12
+                    local lineHeight = mode == "Full" and 17 or ultra and 12 or mode == "Thin" and 13 or 15
+                    local gutterWidth = mode == "Full" and 44 or ultra and 28 or mode == "Thin" and 32 or 36
+                    local codePadding = mode == "Full" and 8 or ultra and 4 or mode == "Thin" and 5 or 6
+                    local edgePadding = mode == "Full" and 6 or ultra and 4 or 5
+                    local typographyKey = string.format("%d:%d:%d:%d", textSize, lineHeight, gutterWidth, codePadding)
+                    local typographyChanged = typographyKey ~= lastTypographyKey
+                    lastTypographyKey = typographyKey
+
+                    if editorTextFrame and editorTextFrame.Parent then
+                        editorTextFrame.Position = UDim2.fromOffset(gutterWidth + codePadding, 0)
+                    end
+                    if gutterFrame and gutterFrame.Parent then
+                        gutterFrame.Size = UDim2.new(0, gutterWidth, 0, math.max(UI.CodeBox.AbsoluteSize.Y, lastCanvasHeight))
+                    end
+                    if lineNumbersFrame and lineNumbersFrame.Parent then
+                        lineNumbersFrame.Position = UDim2.fromOffset(3, 0)
+                        lineNumbersFrame.Size = UDim2.new(0, math.max(1, gutterWidth - 8), 1, 0)
+                    end
+
+                    if typographyChanged or forceRows then
+                        local codeLines = string.split(codebox:getString(), "\n")
+                        local textLabels = {}
+                        local numberLabels = {}
+                        for _, child in next, editorTextFrame:GetChildren() do
+                            if child:IsA("TextLabel") then
+                                table.insert(textLabels, child)
+                            end
+                        end
+                        for _, child in next, lineNumbersFrame:GetChildren() do
+                            if child:IsA("TextLabel") then
+                                table.insert(numberLabels, child)
+                            end
+                        end
+                        table.sort(textLabels, function(a, b) return a.Position.Y.Offset < b.Position.Y.Offset end)
+                        table.sort(numberLabels, function(a, b) return a.Position.Y.Offset < b.Position.Y.Offset end)
+                        local widestLine = 0
+                        for index, label in ipairs(textLabels) do
+                            local rawLine = codeLines[index] or ""
+                            local lineWidth = TextService:GetTextSize(rawLine, textSize, Enum.Font.Code, Vector2.new(math.huge, math.huge)).X
+                            widestLine = math.max(widestLine, lineWidth)
+                            label.TextSize = textSize
+                            label.Position = UDim2.fromOffset(0, codePadding + (index - 1) * lineHeight)
+                            label.Size = UDim2.fromOffset(lineWidth + 16, lineHeight)
+                        end
+                        for index, label in ipairs(numberLabels) do
+                            label.TextSize = textSize
+                            label.Position = UDim2.fromOffset(0, codePadding + (index - 1) * lineHeight)
+                            label.Size = UDim2.new(1, 0, 0, lineHeight)
+                        end
+                        lastCanvasWidth = gutterWidth + codePadding + widestLine + edgePadding
+                        lastCanvasHeight = codePadding + math.max(1, #numberLabels) * lineHeight + edgePadding
+                    end
+
+                    editorTextFrame.Size = UDim2.fromOffset(math.max(UI.CodeBox.AbsoluteSize.X - gutterWidth - codePadding, lastCanvasWidth - gutterWidth - codePadding), math.max(UI.CodeBox.AbsoluteSize.Y, lastCanvasHeight))
+                    editorRightPadding.Position = UDim2.new(1, -edgePadding, 0, 0)
+                    editorRightPadding.Size = UDim2.new(0, math.max(2, edgePadding - 2), 1, -edgePadding)
+                    editorBottomPadding.Position = UDim2.new(0, gutterWidth, 1, -edgePadding)
+                    editorBottomPadding.Size = UDim2.new(1, -gutterWidth - edgePadding, 0, math.max(2, edgePadding - 2))
+                end
+
+                local rawSetRaw = codebox.setRaw
+                codebox.setRaw = function(self, raw)
+                    rawSetRaw(self, raw)
+                    applyEditorTypography(true)
+                end
+                UI.ApplyEditorTypography = applyEditorTypography
+                applyEditorTypography(true)
+                UI.CodeBox:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyEditorTypography)
             end
         end
         codebox:setRaw("-- select a remote to inspect generated code")
