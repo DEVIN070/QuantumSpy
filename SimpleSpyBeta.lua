@@ -220,7 +220,7 @@ function ErrorPrompt(Message,state)
     end
 end
 
-local Highlight = (isfile and loadfile and isfile("Highlight.lua") and loadfile("Highlight.lua")()) or loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua"))()
+local Highlight = loadstring(game:HttpGet("https://raw.githubusercontent.com/DEVIN070/QuantumSpy/main/Highlight.lua"))()
 local LazyFix = loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/Roblox/refs/heads/main/Lua/Libraries/DataToCode/DataToCode.luau"))() -- Very lazy fix as I'm legit just pasting it from the rewrite
 
 local Quantum = {
@@ -3076,28 +3076,12 @@ if not getgenv().SimpleSpyExecuted then
         end
         codebox = Highlight.new(UI.CodeBox)
         do
-            local editorScroller = UI.CodeBox:FindFirstChildOfClass("ScrollingFrame")
-            if editorScroller then
-                local editorTextFrame
-                local gutterFrame
-                local lineNumbersFrame
-                for _, child in next, editorScroller:GetChildren() do
-                    if child:IsA("Frame") then
-                        if child.BackgroundTransparency == 1 then
-                            editorTextFrame = child
-                        else
-                            gutterFrame = child
-                        end
-                    end
-                end
-                if gutterFrame then
-                    for _, child in next, gutterFrame:GetChildren() do
-                        if child:IsA("Frame") and child.BackgroundTransparency == 1 then
-                            lineNumbersFrame = child
-                            break
-                        end
-                    end
-                end
+            local editorScroller = UI.CodeBox:FindFirstChild("CodeScroller")
+            local editorTextFrame = editorScroller and editorScroller:FindFirstChild("TextFrame")
+            local gutterFrame = editorScroller and editorScroller:FindFirstChild("GutterFrame")
+            local lineNumbersFrame = gutterFrame and gutterFrame:FindFirstChild("LineNumbersFrame")
+            local editorStructureValid = editorScroller and editorTextFrame and gutterFrame and lineNumbersFrame
+            if editorStructureValid then
                 local editorRightPadding = Create("Frame",{Name = "EditorRightPadding",Parent = UI.CodeBox,Active = false,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.new(1, -6, 0, 0),Size = UDim2.new(0, 4, 1, -6),ZIndex = UI.CodeBox.ZIndex})
                 local editorBottomPadding = Create("Frame",{Name = "EditorBottomPadding",Parent = UI.CodeBox,Active = false,BackgroundColor3 = Quantum.Editor,BorderSizePixel = 0,Position = UDim2.new(0, 44, 1, -6),Size = UDim2.new(1, -50, 0, 4),ZIndex = UI.CodeBox.ZIndex})
                 local lastTypographyKey
@@ -3105,6 +3089,9 @@ if not getgenv().SimpleSpyExecuted then
                 local lastCanvasHeight = 0
 
                 local function applyEditorTypography(forceRows)
+                    if not (editorScroller.Parent and editorTextFrame.Parent and gutterFrame.Parent and lineNumbersFrame.Parent) then
+                        return
+                    end
                     local mode = UI.Layout.Mode
                     local ultra = UI.Layout.UseInspectorTabs and UI.Background.AbsoluteSize.X <= 500
                     local textSize = mode == "Full" and 14 or ultra and 10 or mode == "Thin" and 11 or 12
@@ -3168,14 +3155,20 @@ if not getgenv().SimpleSpyExecuted then
                     editorBottomPadding.Size = UDim2.new(1, -gutterWidth - edgePadding, 0, math.max(2, edgePadding - 2))
                 end
 
+                local function safelyApplyEditorTypography(forceRows)
+                    local succeeded = pcall(applyEditorTypography, forceRows)
+                    if not succeeded then
+                        UI.ApplyEditorTypography = nil
+                    end
+                end
                 local rawSetRaw = codebox.setRaw
                 codebox.setRaw = function(self, raw)
                     rawSetRaw(self, raw)
-                    applyEditorTypography(true)
+                    safelyApplyEditorTypography(true)
                 end
-                UI.ApplyEditorTypography = applyEditorTypography
-                applyEditorTypography(true)
-                UI.CodeBox:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyEditorTypography)
+                UI.ApplyEditorTypography = safelyApplyEditorTypography
+                safelyApplyEditorTypography(true)
+                UI.CodeBox:GetPropertyChangedSignal("AbsoluteSize"):Connect(safelyApplyEditorTypography)
             end
         end
         codebox:setRaw("-- select a remote to inspect generated code")

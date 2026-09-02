@@ -346,6 +346,10 @@ function Highlight:init(frame)
         textFrame = Instance.new("Frame")
         gutterFrame = Instance.new("Frame")
         lineNumbersFrame = Instance.new("Frame")
+        scrollingFrame.Name = "CodeScroller"
+        textFrame.Name = "TextFrame"
+        gutterFrame.Name = "GutterFrame"
+        lineNumbersFrame.Name = "LineNumbersFrame"
 
         local parentSize = frame.AbsoluteSize
         scrollingFrame.Size = UDim2.new(0, parentSize.X, 0, parentSize.Y)
@@ -363,6 +367,7 @@ function Highlight:init(frame)
         gutterFrame.BorderSizePixel = 0
 
         local gutterDivider = Instance.new("Frame")
+        gutterDivider.Name = "GutterDivider"
         gutterDivider.BackgroundColor3 = Color3.fromRGB(66, 72, 81)
         gutterDivider.BorderSizePixel = 0
         gutterDivider.Position = UDim2.new(1, -1, 0, 0)
