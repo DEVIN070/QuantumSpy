@@ -1403,7 +1403,7 @@ function updateResponsiveLayout(speed, preserveSidebarWidth)
     if useInspectorTabs then
         local tabHeight = 30
         local panelY = 38
-        local actionsHeight = 44
+        local actionsHeight = ultraCompact and 36 or mode == "Thin" and 38 or 40
         local actionsY = contentHeight - actionsHeight - 3
         local panelHeight = math.max(64, actionsY - panelY - 5)
         local remoteHeight = math.min(116, panelHeight)
@@ -1435,7 +1435,7 @@ function updateResponsiveLayout(speed, preserveSidebarWidth)
         applyResponsiveProperties(UI.CodeSection, panelProperties, speed)
         applyResponsiveProperties(UI.ActionsSection, {Position = UDim2.fromOffset(9, actionsY), Size = UDim2.fromOffset(rightWidth, actionsHeight)}, speed)
         applyResponsiveProperties(UI.RemoteContent, {Position = UDim2.fromOffset(8, 8), Size = UDim2.new(1, -16, 1, -16)}, speed)
-        applyResponsiveProperties(UI.ActionsContent, {Position = UDim2.fromOffset(5, 5), Size = UDim2.new(1, -10, 1, -8)}, speed)
+        applyResponsiveProperties(UI.ActionsContent, {Position = UDim2.fromOffset(5, 4), Size = UDim2.new(1, -10, 1, -6)}, speed)
         UI.ActionsOverflowButton.Visible = true
     else
         UI.InspectorHeader.Visible = true
@@ -1855,15 +1855,26 @@ function updateFunctionCanvas()
         end
     end
 
+    local ultraCompact = compactActions and UI.Background.AbsoluteSize.X <= 500
+    local buttonHeight = not compactActions and 28 or ultraCompact and 26 or UI.Layout.Mode == "Thin" and 28 or 30
+    local buttonTextSize = compactActions and (ultraCompact and 9 or 10) or 9
+    for actionName in next, UI.PrimaryActionLabels do
+        local button = UI.ActionButtons[actionName]
+        if button then
+            button.TextSize = buttonTextSize
+        end
+    end
+    UI.ActionsOverflowButton.TextSize = buttonTextSize
+
     local gap = compactActions and 4 or 6
     if compactActions then
         local availableWidth = math.max(6, math.round(UI.ActionsContent.AbsoluteSize.X) - 2)
         local buttonWidth = math.max(1, math.floor((availableWidth - gap * 5) / 6))
         local primaryWidth = buttonWidth * 5 + gap * 4
-        UI.ActionsScroller.Position = UDim2.fromOffset(1, 4)
-        UI.ActionsScroller.Size = UDim2.fromOffset(primaryWidth, 28)
-        UI.ActionsOverflowButton.Position = UDim2.fromOffset(1 + primaryWidth + gap, 4)
-        UI.ActionsOverflowButton.Size = UDim2.fromOffset(buttonWidth, 28)
+        UI.ActionsScroller.Position = UDim2.fromOffset(1, 2)
+        UI.ActionsScroller.Size = UDim2.fromOffset(primaryWidth, buttonHeight)
+        UI.ActionsOverflowButton.Position = UDim2.fromOffset(1 + primaryWidth + gap, 2)
+        UI.ActionsOverflowButton.Size = UDim2.fromOffset(buttonWidth, buttonHeight)
         UI.ActionsScroller.ScrollingDirection = Enum.ScrollingDirection.Y
         UI.ActionsScroller.ScrollBarThickness = 0
         UI.ActionsPadding.PaddingLeft = UDim.new(0, 0)
@@ -1872,7 +1883,7 @@ function updateFunctionCanvas()
         UI.ActionsPadding.PaddingBottom = UDim.new(0, 0)
         UI.ActionsGrid.CellPadding = UDim2.fromOffset(gap, 0)
         UI.ActionsGrid.FillDirectionMaxCells = 5
-        UI.ActionsGrid.CellSize = UDim2.fromOffset(buttonWidth, 28)
+        UI.ActionsGrid.CellSize = UDim2.fromOffset(buttonWidth, buttonHeight)
         UI.ActionsScroller.CanvasSize = UDim2.fromOffset(0, 0)
         return
     end
